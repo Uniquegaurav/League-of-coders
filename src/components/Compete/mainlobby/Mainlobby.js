@@ -130,12 +130,11 @@ const Mainlobby = ({socket,roomcode ,isCreator}) => {
                         </div>}
                         {!TestEnded&&<div className = "countdownTimer">
                             <div className ="timer">
-                                <Countdown onComplete = {handleComplete}  autoStart={false} ref={clockRef} date={finalTime + 60000*1} renderer={renderer}/>
+                                <Countdown onComplete = {handleComplete}  autoStart={false} ref={clockRef} date={finalTime + 60000*totalTime} renderer={renderer}/>
                             </div>
                         </div>}
                     </div>
                     <div className = "bodyContainer">
-
                            { 
                                 !TestEnded&&<div className = "queContainer" >
                                     {
