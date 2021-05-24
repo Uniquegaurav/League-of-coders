@@ -1,0 +1,130 @@
+
+.createOuterContainer {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #191966;
+}
+.headingCreate{
+  width: 400px;
+  color :aliceblue;
+  margin-bottom: 20px;
+  font-size: 25px;
+  font-weight: bold;
+  border-radius: 15px;
+  padding: 8px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background:#051229
+  
+}
+.formContainer {
+  padding-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-bottom: 2px solid white;
+  width: 450px;
+  
+}
+.queBox{
+  color: #fff;
+  text-align: center;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding-top: 20px;
+  padding-left: 5px;
+}
+.labelClass{
+  width: 45%;
+  text-align: center;
+  align-items: center;
+}
+.labelBox{
+  width: 100%;
+  background:#051229;
+  border: 2px solid whitesmoke;
+  color: #fff;
+  display: flex;
+  height: 50px;
+  flex-direction: row;
+  margin-top: 40px;
+  height: 50px;
+  align-items: center;
+  justify-content: center;
+  font-size: medium;
+  font-weight: bold;
+}
+.last-box{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.error-box{
+  position: relative;
+}
+.error-msg{
+  background: rgb(187, 12, 12);
+  margin-left: 20px !important;
+  margin-top: -20px;
+  color: rgb(203, 225, 238);
+  position: absolute; 
+  min-width: 250px;
+  padding: 2px;
+  width: auto;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+ 
+}
+.error-msg::before{
+  content: ''; 
+  width: 0; 
+  height: 0; 
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 10px solid #c51244;
+  position: absolute; 
+  top :10px;
+  left: -10px;
+}
+input[type ="submit"]{
+  color: #fff;
+  text-align: center;
+  text-transform: uppercase;
+  text-decoration: none;
+  margin-top: 40px;
+  background: #2979FF;
+  border-radius: 5px;
+  border: none;
+  font-weight: 300;
+  font-size: 17px;
+  width: 60%;
+  height: 50px;
+  cursor: pointer;
+}
+.input-box {
+  border-radius: 2px;
+  text-align: center;
+  height: 45px;
+  font-size: 21px;
+  font-weight: bold;
+  width: 40%;
+  padding: 10px;
+  
+}
+
+.input-box::-webkit-inner-spin-button {
+  opacity: 1;
+}

@@ -1,0 +1,75 @@
+.mainContainer{
+    font-size: 18px;
+    width: 100vw;
+    position: relative;
+}
+.frf-feedback-container{
+   width: 100%;
+   margin: 150px;
+   display: block;
+   margin-right: 200px;
+}
+.frf-water {
+    display: none;
+}
+
+.sectionClass {
+  padding-top: 4rem;
+  width: 50%;
+  margin: auto;
+}
+h1 {
+  font-size: 2rem;
+  font-weight: 500;
+}
+.detailsClasss[open] summary ~ * {
+  animation: open 0.3s ease-in-out;
+}
+
+@keyframes open {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.detailsClass summary::-webkit-details-marker {
+  display: none;
+}
+
+.detailsClass summary {
+  width: 100%;
+  padding: 0.5rem 0;
+  border-top: 1px solid black;
+  position: relative;
+  cursor: pointer;
+  font-size: 1.25rem;
+  font-weight: 300;
+  list-style: none;
+}
+
+.detailsClass summary:after {
+  content: "+";
+  color: black;
+  position: absolute;
+  font-size: 1.75rem;
+  line-height: 0;
+  margin-top: 0.75rem;
+  right: 0;
+  font-weight: 200;
+  transform-origin: center;
+  transition: 200ms linear;
+}
+.detailsClass[open] summary:after {
+  transform: rotate(45deg);
+  font-size: 2rem;
+}
+.detailsClass summary {
+  outline: 0;
+}
+.detailsClass p {
+  font-size: 0.95rem;
+  margin: 0 0 1rem;
+  padding-top: 1rem;
+}

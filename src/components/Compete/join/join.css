@@ -1,0 +1,141 @@
+
+  .joinOuterContainer2 {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    height: 100vh;
+    align-items: center;
+    background-color:  #191966;
+  }
+
+  .formCotainer2{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    width: 500px;
+    height: 35%;
+    border-bottom: 2px solid white;
+  }
+
+  .headingJoin{
+    color :aliceblue;
+    font-size: 25px;
+    font-weight: bold;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background:#051229;
+    height: 65px;
+    width: 80%;
+    
+  }
+  .inputLobby {
+    width: 60%;
+    height: 55px;
+    margin-bottom: -40px;
+    font-size: 30px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+  .formContainer2 input[type="submit"] {
+    height: 60px;
+    color: #fff !important;
+    text-transform: uppercase;
+    text-decoration: none;
+    background: #2979FF;
+    border-radius: 5px;
+    display: inline-block;
+    border: none;
+    width: 70%;
+    cursor: pointer;
+  }
+
+  .last-box{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .error-box{
+    position: relative;
+  }
+  .error-msg{
+    background: rgb(187, 12, 12);
+    margin-left: 20px !important;
+    margin-top: -20px;
+    color: rgb(203, 225, 238);
+    position: absolute; 
+    min-width: 250px;
+    padding: 2px;
+    width: auto;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+   
+  }
+  .error-msg::before{
+    content: ''; 
+    width: 0; 
+    height: 0; 
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-right: 10px solid #c51244;
+    position: absolute; 
+    top :10px;
+    left: -10px;
+  }
+  
+  .joinOuterContainer {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    height: 100vh;
+    align-items: center;
+    background-color: #191966;
+  }
+  
+  .heading {
+    color: white;
+    font-size: 2.5em;
+    padding-bottom: 10px;
+    border-bottom: 2px solid white;
+  }
+  
+  .button {
+      color: #fff !important;
+      text-transform: uppercase;
+      text-decoration: none;
+      background: #2979FF;
+      padding: 20px;
+      border-radius: 5px;
+      display: inline-block;
+      border: none;
+      width: 100%;
+  }
+  
+  .mt-20 {
+    margin-top: 20px;
+  }
+  
+  @media (min-width: 320px) and (max-width: 480px) {
+    .joinOuterContainer {
+      height: 100%;
+    }
+  
+    .joinInnerContainer {
+      width: 90%;
+    }
+  
+  
+  }
+  
+  button:focus {
+    outline: 0;
+  }

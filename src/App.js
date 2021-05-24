@@ -1,23 +1,33 @@
-import logo from './logo.svg';
+import React from 'react';
 import './App.css';
-
+import { Navbar } from './components';
+import {BrowserRouter as Router ,Route} from 'react-router-dom'
+import GlobalStyle from './globalStyle';
+import Home from './components/Home/Home';
+import Compete from './components/Compete/Compete';
+import Problems from './components/Problems/Problems';
+import Updates from './components/Updates/Updates';
+import Login from './components/Login/Login';
+import Join from './components/Compete/join/Join';
+import Create from './components/Compete/create/Create';
+import AddFeedback from './components/Others/AddFeedback';
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Router>
+         <GlobalStyle/>
+         <Navbar/>
+         <switch>
+          <Route path ="/" exact component = {Home} />
+          <Route path ="/compete" exact component = {Compete} />
+          <Route path ="/problems" component = {Problems} />
+          <Route path ="/updates" component = {Updates} />
+          <Route path ="/sign-up" component = {Login} />
+          <Route path ="/compete/join" exact component = {Join} />
+          <Route path ="/compete/create" component = {Create} />
+          <Route path ="/feedback" component = {AddFeedback} />
+        </switch>
+      </Router>
     </div>
   );
 }
