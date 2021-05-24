@@ -22,9 +22,7 @@ const Dropdown = ({item,tindex}) => {
         currentToggle ? setquesComplCount(prevCount => prevCount+1) :
         setquesComplCount(prevCount => prevCount-1)
     }
-    const handleLoveClick = (index) =>{
-        
-    }
+    
     const arr = Questions.filter(function(i){
         return i.topic === item;
     });

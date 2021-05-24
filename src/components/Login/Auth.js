@@ -1,15 +1,13 @@
 import React, { useState } from 'react'
 import GoogleLogin from 'react-google-login';
-
-import {Avatar ,Button , Paper ,Grid ,Typography ,Container, TextField, } from '@material-ui/core'
+import {Avatar ,Button , Paper ,Grid ,Typography ,Container} from '@material-ui/core'
 import useStyles from './authStyles';
-import LockOutlinedIcon from '@material-ui/icons/LockOutlined'
 import Input from './Input';
 import { FcGoogle } from "react-icons/fc";
 import {useDispatch} from 'react-redux';
 import {useHistory} from 'react-router-dom';
 import {signin ,signup} from '../../actions/auth'
-import { GiCursedStar ,GiAbstract007 ,GiMoebiusTrefoil ,GiShatter,GiShinyOmega ,GiWingedSword} from "react-icons/gi";
+import {GiWingedSword} from "react-icons/gi";
 export const Auth = () => {
     const classes  = useStyles();
     const [isSignup, setisSignup] = useState(false)
@@ -93,8 +91,6 @@ export const Auth = () => {
                                 className ={classes.googleButton}
                                 color = "primary" 
                                 fullWidth
-                                onClick = {renderProps.onClick}
-                                disabled = {renderProps.disabled}
                                 onClick = {renderProps.onClick}
                                 disabled = {renderProps.disabled}
                                 startIcon = {<FcGoogle/>}

@@ -11,10 +11,8 @@ import { Button } from '../../globalStyle';
 import {
   FooterContainer,
   FooterSubscription,
-  FooterSubText,
   FooterSubHeading,
   Form,
-  FormInput,
   FooterLinksContainer,
   FooterLinksWrapper,
   FooterLinkItems,

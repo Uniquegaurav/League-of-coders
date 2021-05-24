@@ -1,13 +1,11 @@
 import React from 'react'
 import './mainlobby.css'
-import ReactDOM from 'react-dom';
 import Countdown from 'react-countdown';
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useSnackbar } from 'snackfy';
-import { SiWolframmathematica ,SiWolfram ,SiOpenbsd ,SiFitbit} from "react-icons/si";
 
 // window.onbeforeunload = (event) => {
 //     const e = event || window.event;
@@ -39,14 +37,14 @@ const Mainlobby = ({socket,roomcode ,isCreator}) => {
         enqueueSnackbar({
             message: ' Working on scoring and question solved detection feature ..stay tune !'
           });
-    }, [])
+    }, [enqueueSnackbar])
     useEffect(() => {
         try {
             socket.on('data',({data,timeinterval}) =>{
                 console.log(data)
                     const array = []
                     const keys = Object.keys(data);
-                    keys.map((i) =>{
+                    keys.forEach((i) =>{
                         array.push({name : data[i].name , url : data[i].url})
                     })
                     settotalTime(timeinterval);

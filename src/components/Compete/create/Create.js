@@ -1,13 +1,9 @@
 import React from 'react'
 import { useEffect } from 'react'
 import { useState } from 'react'
-import {Link} from 'react-router-dom'
 import { io } from "socket.io-client";
 import Mainlobby from '../mainlobby/Mainlobby';
-import {Questions}  from '../../Data/Questions'
-
 import './create.css'
-import { useReducer } from 'react';
 import ErrorBoundary from '../../Others/ErrorBoundary';
 import signinFirst from '../../Others/SIgninFirst';
 import { QuestionsHard, QuestionsMedium ,QuestionsEasy} from '../../Data/Questions2';
@@ -37,8 +33,6 @@ const Create = () => {
         setformData({ ...formData,[e.target.name] : e.target.value});
         console.log(formData,'while changing')
     }
-  
-    var questionData;
     function shuffleArray(array) {
         for (var i = array.length - 1; i > 0; i--) { 
             var j = Math.floor(Math.random() * (i + 1));
@@ -58,18 +52,19 @@ const Create = () => {
         let totalh = QuestionsHard.length;
         console.log(totale,totalm,totalh);
         var arr1 = [];
+        let r;
         while(arr1.length < e){
-            var r = Math.floor(Math.random() * totale) + 1;
+            r = Math.floor(Math.random() * totale) + 1;
             if(arr1.indexOf(r) === -1) arr1.push(r);
         }
         var arr2 = [];
         while(arr2.length < m){
-            var r = Math.floor(Math.random() * totalm) + 1;
+            r = Math.floor(Math.random() * totalm) + 1;
             if(arr2.indexOf(r) === -1) arr2.push(r);
         }
         var arr3 = [];
         while(arr3.length < h){
-            var r = Math.floor(Math.random() * totalh) + 1;
+            r = Math.floor(Math.random() * totalh) + 1;
             if(arr3.indexOf(r) === -1) arr3.push(r);
         }
         var filteredQuestions = []

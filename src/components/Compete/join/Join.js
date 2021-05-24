@@ -1,7 +1,6 @@
 import React from 'react'
 import { useEffect } from 'react'
 import { useState } from 'react'
-import {Link} from 'react-router-dom'
 import { io } from "socket.io-client";
 import ErrorBoundary from '../../Others/ErrorBoundary';
 import Mainlobby from '../mainlobby/Mainlobby'
@@ -35,7 +34,7 @@ const Join = () => {
         setsocketInstance(socket);
         let username = user?.result?.name;
         try {
-            if(username&&roomcode!=111){
+            if(username&&roomcode!==111){
                 socket.emit('joinrequest',{roomid : roomcode});
                 socket.on('joinresponse' ,({response}) =>{
                     if(response === 'canjoin'){

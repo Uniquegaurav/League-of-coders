@@ -1,6 +1,5 @@
 import { makeStyles } from '@material-ui/core/styles';
 import { deepPurple } from '@material-ui/core/colors';
-import zIndex from '@material-ui/core/styles/zIndex';
 
 export default makeStyles((theme) => ({
   appBar: {
@@ -50,7 +49,6 @@ export default makeStyles((theme) => ({
     //  background : 'rgbaa(0,0,0,.1)',
     //  boxShadow : '0 0 5px rgba(0,0,00,5) inset',
     fontSize : '12px',
-     background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
     //  border: '2px solid ',
      borderRadius: 3,
      color: 'white',

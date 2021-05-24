@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import GlowButton from '../Button/GlowButton'
 import { MainContainer } from './Compete.elements'
-import Create from './create/Create'
-import Join from './join/Join'
 import {Link} from 'react-router-dom'
 import SIgninFirst from '../Others/SIgninFirst'
  

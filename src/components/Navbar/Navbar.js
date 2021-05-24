@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import './Navbar.css'
 import {FaBars} from 'react-icons/fa'
-import GlobalStyle, { Button } from '../../globalStyle'
+import { Button } from '../../globalStyle'
 import { FaTimes } from 'react-icons/fa'
 import {IconContext} from 'react-icons/lib'
 import Avatar from '@material-ui/core/Avatar';
