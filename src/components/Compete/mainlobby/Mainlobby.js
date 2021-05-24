@@ -37,7 +37,7 @@ const Mainlobby = ({socket,roomcode ,isCreator}) => {
         enqueueSnackbar({
             message: ' Working on scoring and question solved detection feature ..stay tune !'
           });
-    }, [enqueueSnackbar])
+    }, [])
     useEffect(() => {
         try {
             socket.on('data',({data,timeinterval}) =>{
