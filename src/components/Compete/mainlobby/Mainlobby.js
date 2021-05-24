@@ -119,15 +119,18 @@ const Mainlobby = ({socket,roomcode ,isCreator}) => {
             <div className  ="mainbox">
                     <div className = "heading-timer">
                         <div className = "headingTop">
-                            <h1>This is heading</h1>
-
+                           { 
+                              TestEnded ? <h1>MAIN LOBBY</h1> : (
+                                  TestStarted?<h1>Start solving problems</h1>:<h1>Lobby not started yet</h1>
+                              )
+                           }
                         </div>
                         {!TestEnded&&<div className = "lobby-code">
                             <h1>{roomcode}</h1>
                         </div>}
                         {!TestEnded&&<div className = "countdownTimer">
                             <div className ="timer">
-                                <Countdown onComplete = {handleComplete}  autoStart={false} ref={clockRef} date={finalTime + 60000*totalTime} renderer={renderer}/>
+                                <Countdown onComplete = {handleComplete}  autoStart={false} ref={clockRef} date={finalTime + 60000*1} renderer={renderer}/>
                             </div>
                         </div>}
                     </div>
