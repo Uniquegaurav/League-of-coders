@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import { Navbar } from './components';
-import {BrowserRouter as Router ,Route} from 'react-router-dom'
+import {HashRouter as Router ,Route} from 'react-router-dom'
 import GlobalStyle from './globalStyle';
 import Home from './components/Home/Home';
 import Compete from './components/Compete/Compete';
