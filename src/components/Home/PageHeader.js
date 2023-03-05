@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { useEffect } from 'react';
-import { Button } from '../Button/Button'
 import './PageHeader.css';
+import { useEffect } from 'react';
+import { PrimaryButton } from '../Common_components/Button/PrimaryButton';
 import { GiCurlyWing} from "react-icons/gi";
+import homeScreenBanner from "../../images/homebanner2.png";
 
 
 const PageHeader = () => {
@@ -13,32 +14,37 @@ const PageHeader = () => {
         setuser(JSON.parse(localStorage.getItem('profile')))
     }, [])
     return (
-        <div className = 'pageheader-container'>
-            <h1 className>A place to hone your computer programming skills</h1>
-            <p>Loc is a coding platform for solving selected dsa problems in a competitive test like environment</p>
+        <div className = 'header-main-container'>
+    
+            <div className = 'title-container' >
+            <h1 className>A place to hone your programming skills</h1>
+            <p>Coding platform for solving challenging problems in a competitive environment</p>x
             
             {(!user?.result)&&<div className  ="secondContainer">
                 <p>Sign in to use all features<GiCurlyWing/></p>
-                <Button
-                    className='btns'
-                    buttonStyle='btn--outline'
+                <PrimaryButton 
+                    buttonStyle='btn--primary--outline'
                     buttonSize='btn--large'
                     buttonURL = '/sign-up'
                     >
                     SIGN IN
-               </Button>
+               </PrimaryButton >
            </div>}
            {
            <div className  ="secondContainer">
                 <p>{(!user?.result) ? 'Check all the recent updates available' : 'Practice problems and level up your skills' }<GiCurlyWing/></p>
-                <Button
-                    className='btns'
-                    buttonStyle='btn--outline'
+                <PrimaryButton 
+                    buttonStyle='btn--primary--outline'
                     buttonSize='btn--large'
                     buttonURL = {(!user?.result) ? '/updates': '/compete' }
-                    >GET STARTED</Button>
+                    >GET STARTED</PrimaryButton >
            </div>
           }
+            </div>
+            <div>
+            <img className='banner' src={homeScreenBanner} alt="Logo" />;
+            </div>
+           
         </div>
         
     )

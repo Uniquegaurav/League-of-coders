@@ -25,9 +25,9 @@ export default makeStyles((theme) => ({
   },
   profile: {
     display: 'flex',
-    position : 'relative',
+    position: 'relative',
     justifyContent: 'space-between',
-    
+
   },
   userName: {
     display: 'flex',
@@ -40,30 +40,35 @@ export default makeStyles((theme) => ({
   purple: {
     color: theme.palette.getContrastText(deepPurple[500]),
     backgroundColor: deepPurple[500],
+    cursor: 'pointer',
   },
-  logoutbox : {
-     position: 'absolute',
-     top : '54px',
-     right : '-45px',
-     zIndex: '-1',
-    //  background : 'rgbaa(0,0,0,.1)',
-    //  boxShadow : '0 0 5px rgba(0,0,00,5) inset',
-    fontSize : '12px',
-    //  border: '2px solid ',
-     borderRadius: 3,
-     color: 'white',
-     background : 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-     height: 'auto', 
-     width : 'auto',
-     minWidth : '138px',
-     minHeight : '60px',
+  logoutbox: {
+    position: 'absolute',
+    top: '54px',
+    right: '-45px',
+    zIndex: '-1',
+    fontSize: '12px',
+    borderRadius: 3,
+    background: 'white',
+    height: 'auto',
+    width: 'auto',
+    minWidth: '160px',
+    minHeight: '100px',
+    padding : '10px',
+    paddingTop : '15px',
   },
-  buttonLogout : {
-    boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
-    fontSize : '14px',
-    fontWeight : 'bold',
-    background : 'linear-gradient(41deg, #2996F6 56%, #29CBE3 73%)',
-    border: '0.1px solid'
-    
+  buttonLogout: {
+    fontSize: '12px',
+    fontWeight: 'bold',
+    paddingLeft : '25px',
+    paddingRight :'25px',
+    border: '0.1px solid',
+    marginTop : '18px',
+    marginBottom : '7px', 
+  },
+  emailText : {
+    fontSize: '12px',
+    fontWeight : 'normal',
+    color : 'green',
   }
 }));

@@ -1,66 +1,84 @@
-.pageheader-container {
-    background: url('../../images/blue-bg.png') center center/cover no-repeat; 
-    height: 100vh;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    box-shadow: inset 0 0 0 1000px rgba(0, 0, 0, 0.2);
-    object-fit: contain;
-  }
-  
-  .pageheader-container > h1 {
-    color: #fff;
-    font-size: 50px;
-  }
-  .secondContainer{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    margin-top: 8px;
-  }
-  .secondContainer p {
-    margin: 20px;
-    padding: 2px;
-    margin-right: 40px;
-    color: #fff;
-    font-size: 23px;
-  }
-  .pageheader-container > p {
-    margin-top: 22px;
-    padding-bottom: 70px;
-    color: #fff;
-    font-size: 30px;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
-      'Lucida Sans', Arial, sans-serif;
-  }
-  
-  .btn {
-    width: 200px;
+.header-main-container{
+  background: url('../../images/blue-bg.png') center center/cover no-repeat;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: inset 0 0 0 1000px rgba(0, 0, 0, 0.2);
+  object-fit: contain;
+}
+.title-container{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  margin-left: 40px;
+}
+
+.title-container>h1{
+  color: #fff;
+  font-size: 50px;
+}
+
+.title-container>p{
+  margin-top: 22px;
+  margin-bottom: 80px;
+  color: rgb(57, 143, 172);
+  font-size: 28px;
+}
+
+.banner{
+  height: 560px;
+  width: 600px;
+  margin-top: 75px;
+  margin-right: 20px;
+  margin-left: 40px;
+}
+
+.secondContainer{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 25px;
+}
+
+.secondContainer p{
+  margin-right: 40px;
+  color: #fff;
+  font-size: 23px;
+}
+
+
+.btn{
+  width: 200px;
+}
+
+@media screen and (max-width: 768px){
+  .title-container>h1 {
+    font-size: 34px;
+    margin-top: -100px;
   }
 
-  @media screen and (max-width: 768px) {
-    .pageheader-container > h1 {
-      font-size: 38px;
-      margin-top: -100px;
-    }
-  
-    .pageheader-container > p {
-      font-size: 25px;
-    }
-    .btn{
-      width: 160px;
-      font-size: 0.9rem;
-    }
-    .secondContainer{
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .secondContainer p{
-      font-size: 26px;
-    }
+  .header-main-container>p{
+    font-size: 20px;
   }
+
+  .btn{
+    width: 160px;
+    font-size: 0.9rem;
+  }
+
+  .secondContainer{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .secondContainer p{
+    font-size: 20px;
+  }
+}

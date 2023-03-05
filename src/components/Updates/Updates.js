@@ -6,10 +6,10 @@ import Form from './Form/Form';
 import useStyles from './updatestyles'
 import {useDispatch} from 'react-redux';
 import { useEffect } from 'react';
-
+import { IoReturnUpBackOutline} from "react-icons/io5";
 import {getPost} from '../../actions/posts'
 import { useState } from 'react';
-import ErrorBoundary from '../Others/ErrorBoundary';
+import ErrorBoundary from '../Common_components/Others/ErrorBoundary';
 
 const Updates = () => {
     useEffect(() => {
@@ -32,7 +32,7 @@ const Updates = () => {
             <Button variant="contained" color="lightpink" 
                  style={{ width: '14rem' ,height : '3rem' ,fontSize : '18px',fontWeight : 'bold'}}
                  onClick = {()=> setpostActive(!postActive)}>
-                 {postActive? 'ADD NEW POST' : 'GO BACK'}</Button>
+                 {postActive? 'ADD NEW POST' :'ALL POSTS' }</Button>
          </div>
         <Container maxWidth = "lg">
             <AppBar className ={classes.appBar} position = "static" color ="inherit" >

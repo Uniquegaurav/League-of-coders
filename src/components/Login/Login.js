@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import ErrorBoundary from '../Others/ErrorBoundary';
+import ErrorBoundary from '../Common_components/Others/ErrorBoundary';
 import { Auth } from './Auth';
 import './Login.css';
 

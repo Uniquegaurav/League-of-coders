@@ -2,7 +2,7 @@ import React from 'react'
 import { useEffect } from 'react'
 import { useState } from 'react'
 import { io } from "socket.io-client";
-import ErrorBoundary from '../../Others/ErrorBoundary';
+import ErrorBoundary from '../../Common_components/Others/ErrorBoundary';
 import Mainlobby from '../mainlobby/Mainlobby'
 import './join.css'
 let socket;
@@ -74,7 +74,7 @@ const Join = () => {
                         </div>
                         <input className ="inputLobby" required type = "text" onChange = {handleChange}/>
                        
-                        <div className = "last-box">
+                        <div className = "join-lobby-submit-box">
                             <input  type ="submit" value ="Join lobby"/>
                             {errorMsg&&<div className  = "error-box">
                                 <div className = "error-msg"><p>{errorMsg}</p></div>

@@ -25,8 +25,6 @@ export const FooterSubscription = styled.section`
 `;
 
 export const FooterSubHeading = styled.p`
-  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
-    'Lucida Sans', Arial, sans-serif;
   margin-bottom: 22px;
   font-size: 24px;
 `;
@@ -139,25 +137,13 @@ export const SocialMediaWrap = styled.div`
   }
 `;
 
-export const SocialLogo = styled(Link)`
-  color: #fff;
-  justify-self: start;
-  cursor: pointer;
-  text-decoration: none;
-  font-size: 2rem;
-  display: flex;
-  align-items: center;
-  margin-bottom: 16px;
-`;
+
 
 export const SocialIcon = styled(FaBattleNet)`
   margin-right: 12px;
 `;
 
-export const WebsiteRights = styled.small`
-  color: #fff;
-  margin-bottom: 16px;
-`;
+
 
 export const SocialIcons = styled.div`
   display: flex;
@@ -165,8 +151,28 @@ export const SocialIcons = styled.div`
   align-items: center;
   width: 240px;
 `;
-
 export const SocialIconLink = styled.a`
   color: #fff;
   font-size: 24px;
+`;
+
+export const BottomFooter = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+`;
+export const SocialLogo = styled(Link)`
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+`;
+export const WebsiteRights = styled.small`
+  color: #fff;
+  margin-top: 12px;
+  padding-left : 5px;  
+  padding-right : 50px;
 `;

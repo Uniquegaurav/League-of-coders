@@ -58,7 +58,7 @@ const Form = ({currentId,setCurrentId ,postActive,setpostActive}) => {
         return(
             <Paper className = {classes.paper}>
                 <Typography variant ="h6" align ="center">
-                    Please Sign in to add a new Post !!!!!
+                    Please sign in to add a new post !!!!!
                 </Typography>
             </Paper>
         )
@@ -66,17 +66,17 @@ const Form = ({currentId,setCurrentId ,postActive,setpostActive}) => {
     return (
         <Paper className = {classes.paper}>
             <form autoComplete = "off" noValidate className = {`${classes.root} ${classes.form}`} onSubmit = {handleSubmit}>
-                <Typography variant ="h6"> {currentId ? 'EDITING' : 'ADDING'} A POST</Typography>
+                <Typography variant ="h6"> {currentId ? 'EDIT POST' : 'ADD A NEW POST'}</Typography>
 
-                <TextField name = "title" variant = "outlined" label ="Heading" fullWidth 
+                <TextField name = "title" variant = "outlined" label ="Title" fullWidth 
                  value ={postData.title} 
                  onChange ={(e) => setpostData({ ...postData , title : e.target.value})}/>
 
-                <TextField name = "message" variant = "outlined" label ="Message" fullWidth 
+                <TextField name = "message" variant = "outlined" label ="Descrition" fullWidth 
                  value ={postData.message} 
                  onChange ={(e) => setpostData({ ...postData , message : e.target.value})}/>
 
-                <TextField name = "tags" variant = "outlined" label ="Single Url" fullWidth 
+                <TextField name = "tags" variant = "outlined" label ="Link" fullWidth 
                  value ={postData.tags} 
                  onChange ={(e) => setpostData({ ...postData , tags : e.target.value})}/>
 

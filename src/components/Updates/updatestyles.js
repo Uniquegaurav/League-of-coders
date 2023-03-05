@@ -33,5 +33,5 @@ export default makeStyles(() => ({
   },
   contentsContainer : {
     display : 'contents',
-  }
+  },
 }));

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import GlowButton from '../Button/GlowButton'
+import GlowButton from '../Common_components/Button/GlowButton'
 import { MainContainer } from './Compete.elements'
 import {Link} from 'react-router-dom'
-import SIgninFirst from '../Others/SIgninFirst'
+import SIgninFirst from '../Common_components/Others/SIgninFirst'
  
 const Compete = () => {
   const [user, setuser] = useState(JSON.parse(localStorage.getItem('profile')))

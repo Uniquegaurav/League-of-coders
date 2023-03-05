@@ -1,12 +1,12 @@
 import React from 'react';
-import './Button.css';
+import './PrimaryButton.css';
 import { Link } from 'react-router-dom';
 
-const STYLES = ['btn--primary', 'btn--outline', 'btn--test'];
+const STYLES = ['btn--primary', 'btn--primary--outline'];
 
 const SIZES = ['btn--medium', 'btn--large'];
 
-export const Button = ({
+export const PrimaryButton = ({
   children,
   type,
   onClick,
@@ -21,7 +21,7 @@ export const Button = ({
   const checkButtonSize = SIZES.includes(buttonSize) ? buttonSize : SIZES[0];
 
   return (
-    <Link to={buttonURL} className='btn-mobile'>
+    <Link to={buttonURL}>
       <button
         className={`btn ${checkButtonStyle} ${checkButtonSize}`}
         onClick={onClick}

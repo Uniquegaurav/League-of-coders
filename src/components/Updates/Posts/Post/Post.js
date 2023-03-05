@@ -6,6 +6,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
 import moment from 'moment';
 import { useDispatch } from 'react-redux';
+import {FaExternalLinkAlt} from "react-icons/fa"
 
 import useStyles from './styles';
 import { deletePost ,likePost } from '../../../../actions/posts';
@@ -56,7 +57,7 @@ const Post = ({post ,setCurrentId,postActive,setpostActive}) => {
                     )}
                     <div className={classes.details}>
                         <Typography variant="body2" color="textSecondary" component="h2">
-                            {post.tags&&<a className = {classes.tagdesign} target="_blank" href ={post.tags.trim()}>Go to the given link</a>}
+                            {post.tags&&<a className = {classes.tagdesign} target="_blank" href ={post.tags.trim()}><FaExternalLinkAlt/></a>}
                         </Typography>
                     </div>
 

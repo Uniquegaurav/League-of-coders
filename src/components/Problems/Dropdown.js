@@ -2,11 +2,7 @@ import React, { useState } from 'react'
 import { useEffect } from 'react';
 import {HiSortDescending } from "react-icons/hi";
 import { HiSortAscending } from "react-icons/hi"
-// import { likeQuestion } from '../../actions/posts';
-// import { GrFavorite } from "react-icons/gr";
-// import styled from "styled-components"
-// import { MobileIcon } from '../Navbar/Navbar.elements';
-import {Questions} from '../Data/Questions';
+import {Questions} from '../../data/Questions';
 import { HeadingContent, HeadingCount,HeadingName, LoveReact, MarkSwitch, QuestionLink,QuestionList, 
     QuestionsContainer, 
      TopicBar ,TopicListIcon } from './Problems.elements'

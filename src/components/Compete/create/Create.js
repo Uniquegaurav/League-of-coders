@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { io } from "socket.io-client";
 import Mainlobby from '../mainlobby/Mainlobby';
 import './create.css'
-import ErrorBoundary from '../../Others/ErrorBoundary';
-import signinFirst from '../../Others/SIgninFirst';
-import { QuestionsHard, QuestionsMedium ,QuestionsEasy} from '../../Data/Questions2';
+import ErrorBoundary from '../../Common_components/Others/ErrorBoundary';
+import signinFirst from '../../Common_components/Others/SIgninFirst';
+import { QuestionsHard, QuestionsMedium ,QuestionsEasy} from '../../../data/Questions2';
 let socket;
 const Create = () => {
     

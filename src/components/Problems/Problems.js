@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { useEffect } from 'react';
 import { MainContainer } from './Problems.elements'
-import {Topics} from '../Data/Topics'
+import { Topics } from '../../data/Topics';
 import Dropdown from './Dropdown';
-import SIgninFirst from '../Others/SIgninFirst';
-import ErrorBoundary from '../Others/ErrorBoundary';
+import SIgninFirst from '../Common_components/Others/SIgninFirst';
+import ErrorBoundary from '../Common_components/Others/ErrorBoundary';
 
 const Problems = () => {
     

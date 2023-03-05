@@ -6,13 +6,14 @@
     height: 100vh;
     align-items: center;
     background-color:  #191966;
+    padding-bottom: 50px;
   }
 
   .formCotainer2{
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-around;
+    justify-content: center;
     width: 500px;
     height: 35%;
     border-bottom: 2px solid white;
@@ -29,17 +30,15 @@
     background:#051229;
     height: 65px;
     width: 80%;
+   
     
   }
   .inputLobby {
     width: 60%;
     height: 55px;
-    margin-bottom: -40px;
     font-size: 30px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
+    text-align: center;
+    margin-top: 50px;
   }
   .formContainer2 input[type="submit"] {
     height: 60px;
@@ -54,7 +53,7 @@
     cursor: pointer;
   }
 
-  .last-box{
+  .join-lobby-submit-box{
     display: flex;
     flex-direction: row;
     justify-content: center;

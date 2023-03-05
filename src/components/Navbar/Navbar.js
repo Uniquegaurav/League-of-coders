@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import './Navbar.css'
 import {FaBars} from 'react-icons/fa'
-import { Button } from '../../globalStyle'
+import { SecondaryButton } from '../Common_components/Button/SecondaryButtton'
 import { FaTimes } from 'react-icons/fa'
 import {IconContext} from 'react-icons/lib'
 import Avatar from '@material-ui/core/Avatar';
@@ -95,18 +95,19 @@ const Navbar = () => {
                                                 >{user.result.name.charAt(0)}</Avatar>
 
                                           <Box className={classes.logoutbox} display = {profileClick ? "block" : "none"}>
-                                              <Typography variant="body2">{user.result.name}</Typography>
+                                              <Typography  variant="body2">{user.result.name}</Typography>
+                                              <Typography className={classes.emai} >{user.result.email}</Typography>
                                               <Button2 className = {classes.buttonLogout} onClick={logout}>LOGOUT</Button2>
                                           </Box>
                                         </div>
                                  : <NavItemBtn>
                                     { button ? (
                                         <NavBtnLink to = "/sign-up">
-                                            <Button primary>SIGN IN</Button>
+                                            <SecondaryButton primary>SIGN IN</SecondaryButton>
                                         </NavBtnLink>
                                     ):(
                                         <NavBtnLink to = "/sign-up">
-                                            <Button fontBig primary> SIGN IN</Button>
+                                            <SecondaryButton fontBig primary> SIGN IN</SecondaryButton>
                                         </NavBtnLink>
                                     )}
                                 </NavItemBtn>

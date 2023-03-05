@@ -10,7 +10,7 @@ import Updates from './components/Updates/Updates';
 import Login from './components/Login/Login';
 import Join from './components/Compete/join/Join';
 import Create from './components/Compete/create/Create';
-import AddFeedback from './components/Others/AddFeedback';
+import AddFeedback from './components/Common_components/Others/AddFeedback';
 function App() {
   return (
     <div className="App">
