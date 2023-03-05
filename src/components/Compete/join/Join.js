@@ -8,7 +8,7 @@ import './join.css'
 let socket;
 const Join = () => {    
 
-    const ENDPOINT = 'https://league-of-coders.herokuapp.com';
+    const ENDPOINT = 'https://league-of-coders-backend.onrender.com';
     const userInstance  = JSON.parse(localStorage.getItem('profile'));
     const [user, setuser] = useState(userInstance);
     const [showlobby, setshowlobby] = useState(false);
