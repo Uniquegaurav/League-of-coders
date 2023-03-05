@@ -13,7 +13,7 @@ const Create = () => {
     const userInstance  = JSON.parse(localStorage.getItem('profile'));
     const [user, setuser] = useState(userInstance);
     const [roomcode, setroomcode] = useState(111);
-    const ENDPOINT = 'https://league-of-coders.herokuapp.com';
+    const ENDPOINT = 'https://league-of-coders-backend.onrender.com';
     const [socketInstance, setsocketInstance] = useState(socket)
     const [errorMsg, seterrorMsg] = useState('')
     const [showlobby, setshowlobby] = useState(false)
