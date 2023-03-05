@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API = axios.create({baseURL : 'https://league-of-coders.herokuapp.com'});
+const API = axios.create({baseURL : 'https://league-of-coders-backend.onrender.com'});
 
 API.interceptors.request.use((req) =>{
     if(localStorage.getItem('profile')){
