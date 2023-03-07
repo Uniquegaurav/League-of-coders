@@ -91,13 +91,13 @@ function Footer() {
       <BottomFooter>
         <SocialLogo to='/'>
           <SocialIcon />
-          LEAGUE OF CODERS
+          CODERS LEAGUE
         </SocialLogo>
-        <WebsiteRights>LOC © 2021</WebsiteRights>
+        <WebsiteRights>CL © 2023</WebsiteRights>
 
         <Form>
           {/* <FormInput name='message' type='message' placeholder='message' /> */}
-          <Link to='/feedback'><SecondaryButton fontBig>Feedback</SecondaryButton></Link>
+          {/* <Link to='/feedback'><SecondaryButton fontBig>Feedback</SecondaryButton></Link> */}
         </Form>
       </BottomFooter>
 

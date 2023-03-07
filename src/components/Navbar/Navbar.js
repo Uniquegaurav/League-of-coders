@@ -69,7 +69,7 @@ const Navbar = () => {
                     <NavbarContainer>
                         <NavLogo to = "/">
                             <NavIcon/>
-                            LEAGUE OF CODERS
+                            CODERS LEAGUE
                         </NavLogo>
                         <MobileIcon onClick = {handleClick}>
                             {click ? <FaTimes/> : <FaBars/>}

@@ -6,16 +6,8 @@ import { useEffect } from 'react';
 import { useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useSnackbar } from 'snackfy';
+import { BiAlarmExclamation } from "react-icons/bi";
 
-// window.onbeforeunload = (event) => {
-//     const e = event || window.event;
-//     // Cancel the event
-//     e.preventDefault();
-//     if (e) {
-//       e.returnValue = ''; // Legacy method for cross browser support
-//     }
-//     return ''; // Legacy method for cross browser support
-// };
 
 const renderer = ({ hours, minutes, seconds, completed }) => {
     if (!completed) {
@@ -34,9 +26,9 @@ const Mainlobby = ({socket,roomcode ,isCreator}) => {
     // for question data and time interval
     useEffect(() => {
         document.title = "League of coders - Real time lobby"
-        enqueueSnackbar({
-            message: ' Working on scoring and question solved detection feature ..stay tune !'
-          });
+        // enqueueSnackbar({
+        //     message: ' Working on scoring and question solved detection feature ..stay tune !'
+        //   });
     }, [])
     useEffect(() => {
         try {
@@ -128,8 +120,10 @@ const Mainlobby = ({socket,roomcode ,isCreator}) => {
                         {!TestEnded&&<div className = "lobby-code">
                             <h1>{roomcode}</h1>
                         </div>}
+            
                         {!TestEnded&&<div className = "countdownTimer">
                             <div className ="timer">
+                            <BiAlarmExclamation/> 
                                 <Countdown onComplete = {handleComplete}  autoStart={false} ref={clockRef} date={finalTime + 60000*totalTime} renderer={renderer}/>
                             </div>
                         </div>}

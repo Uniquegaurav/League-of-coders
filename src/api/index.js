@@ -23,7 +23,3 @@ export const signIn = (formData) => API.post('/users/signin',formData);
 
 export const signUp = (formData) => API.post('/users/signup',formData);
 
-// // for Questions 
-// const url = 'http://localhost:5000/questions';
-
-// export const likeQuestion = (id,likevalue) => axios.patch(`${url}/${id}/likeQuestion`,likevalue);
