@@ -17,7 +17,7 @@ const Join = () => {
     const [roomcode, setroomcode] = useState(111);
     
     useEffect(() => {
-        document.title = "League of coders - join a lobby"
+        document.title = "Coders League - join a lobby"
     }, [])
 
     useEffect(() => {

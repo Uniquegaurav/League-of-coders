@@ -5,7 +5,7 @@ import './Login.css';
 
 function Login() {
     useEffect(() => {
-        document.title = "League of coders - Sign in"
+        document.title = "Coders League - Sign in"
     }, [])
     return (
         <div className ="login-container">  

@@ -8,7 +8,7 @@ const Compete = () => {
   const [user, setuser] = useState(JSON.parse(localStorage.getItem('profile')))
   console.log(user,'Problems user')
   useEffect(() => {
-    document.title = "League of coders - Compete"
+    document.title = "Coders League - Compete"
    }, [])
   useEffect(() => {
       setuser(JSON.parse(localStorage.getItem('profile')))

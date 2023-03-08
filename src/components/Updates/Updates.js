@@ -13,7 +13,7 @@ import ErrorBoundary from '../Common_components/Others/ErrorBoundary';
 
 const Updates = () => {
     useEffect(() => {
-        document.title = "League of coders - Updates"
+        document.title = "Coders League - Updates"
     }, [])
     const classes = useStyles();
     const dispatch = useDispatch();

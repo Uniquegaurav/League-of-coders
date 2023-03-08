@@ -19,7 +19,7 @@ const Create = () => {
     const [showlobby, setshowlobby] = useState(false)
 
     useEffect(() => {
-        document.title = "League of coders - create a new lobby"
+        document.title = "Coders League - create a new lobby"
     }, [])
     useEffect(() => {
         

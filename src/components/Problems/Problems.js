@@ -9,7 +9,7 @@ import ErrorBoundary from '../Common_components/Others/ErrorBoundary';
 const Problems = () => {
     
     useEffect(() => {
-        document.title = "League of coders - Solve problems"
+        document.title = "Coders League - Solve problems"
     }, [])
     const [user, setuser] = useState(JSON.parse(localStorage.getItem('profile')))
     console.log(user,'Problems user')

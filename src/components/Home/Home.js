@@ -4,7 +4,7 @@ import PageHeader from './PageHeader'
 
 const Home = () => {
     useEffect(() => {
-        document.title = "League of coders"
+        document.title = "Coders League"
     }, [])
     return (
         <div>

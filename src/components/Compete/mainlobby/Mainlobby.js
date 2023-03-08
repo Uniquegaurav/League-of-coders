@@ -25,7 +25,7 @@ const Mainlobby = ({socket,roomcode ,isCreator}) => {
     
     // for question data and time interval
     useEffect(() => {
-        document.title = "League of coders - Real time lobby"
+        document.title = "Coders League - Real time lobby"
         // enqueueSnackbar({
         //     message: ' Working on scoring and question solved detection feature ..stay tune !'
         //   });
