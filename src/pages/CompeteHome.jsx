@@ -1,8 +1,11 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import clsx from 'clsx';
 import { ArrowRight, Crown, Link2, Radio, Swords, Timer, Trophy, UserPlus } from 'lucide-react';
 import { api } from '../lib/api';
+import { tierFor } from '../lib/rank';
 import { useAuth } from '../context/AuthContext';
+import heroCoder from '../assets/hero-coder.png';
 import usePolling from '../hooks/usePolling';
 import MatchCard from '../components/match/MatchCard';
 import JoinByCode from '../components/match/JoinByCode';
@@ -89,10 +92,17 @@ export default function CompeteHome() {
           </div>
         </div>
 
-        <div className="card relative overflow-hidden p-6">
-          <div className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-brand-500/20 blur-3xl" />
-          <p className="section-title mb-4">How scoring works</p>
-          <ScoringRules compact />
+        <div className="space-y-4">
+          <div className="relative overflow-hidden rounded-2xl border border-medium/30 bg-gradient-to-b from-[#221c4a] to-ink-900 p-3 shadow-[0_0_48px_-16px_rgba(251,191,36,0.45)]">
+            <p className="px-2 pt-1 text-center font-display text-[11px] font-semibold uppercase tracking-[0.28em] text-medium">
+              Ranked queue
+            </p>
+            <img src={heroCoder} alt="A coder at a desk, ready to queue" className="mx-auto max-h-80 w-full object-contain" />
+          </div>
+          <div className="card p-5">
+            <p className="section-title mb-4">How scoring works</p>
+            <ScoringRules compact />
+          </div>
         </div>
       </section>
 
@@ -181,18 +191,24 @@ export default function CompeteHome() {
           </div>
           {top.data?.length ? (
             <ol className="space-y-2">
-              {top.data.map((p, i) => (
+              {top.data.map((p, i) => {
+                const tier = tierFor(p.stats.rating);
+                return (
                 <li key={p.id}>
                   <Link to={`/u/${p.id}`} className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-ink-800">
                     <span className="w-5 text-center font-mono text-sm text-ink-400">{i === 0 ? <Crown className="h-4 w-4 text-medium" /> : i + 1}</span>
                     <Avatar name={p.name} src={p.avatar} size={30} />
-                    <span className="flex-1 truncate text-sm font-medium text-ink-200">
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-200">
                       {p.name} <VerifiedBadge verified={p.leetcode?.verified} />
                     </span>
-                    <span className="font-mono text-sm font-bold text-brand-400">{p.stats.rating}</span>
+                    <span className="text-right">
+                      <span className={clsx('block font-display text-[11px] font-semibold uppercase tracking-wider', tier.color)}>{tier.name}</span>
+                      <span className="font-mono text-sm font-bold text-brand-400">{p.stats.rating}</span>
+                    </span>
                   </Link>
                 </li>
-              ))}
+                );
+              })}
             </ol>
           ) : (
             <p className="text-sm text-ink-400">Play a rated battle (2+ players) to appear here.</p>

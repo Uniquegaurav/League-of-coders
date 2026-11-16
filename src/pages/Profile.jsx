@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { toast } from 'sonner';
 import { ArrowRight, Check, Copy, ExternalLink, History, Link2, ShieldCheck, Unlink } from 'lucide-react';
 import { api } from '../lib/api';
+import { tierFor } from '../lib/rank';
 import { timeAgo, ordinal } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
 import { Avatar, EmptyState, PageLoader, Spinner, VerifiedBadge } from '../components/ui';
@@ -174,8 +175,10 @@ export default function Profile() {
 
   const { player, history } = data;
   const s = player.stats;
+  const tier = tierFor(s.rating);
   const stats = [
     ['Rating', s.rating, 'text-brand-400'],
+    ['Tier', tier.name, tier.color],
     ['Battles', s.matches],
     ['Wins', s.wins],
     ['Win rate', `${s.matches ? Math.round((s.wins / s.matches) * 100) : 0}%`],
@@ -198,7 +201,7 @@ export default function Profile() {
             </p>
           </div>
         </div>
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
           {stats.map(([label, value, color]) => (
             <div key={label} className="rounded-xl border border-ink-800 bg-ink-950/40 p-4">
               <p className={clsx('font-display text-2xl font-bold', color || 'text-white')}>{value}</p>
