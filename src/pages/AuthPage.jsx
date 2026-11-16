@@ -6,8 +6,6 @@ import { Swords } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Spinner } from '../components/ui';
 
-const googleEnabled = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
 export default function AuthPage() {
   const { user, login, register, googleLogin } = useAuth();
   const location = useLocation();
@@ -87,27 +85,24 @@ export default function AuthPage() {
           {busy && <Spinner className="h-4 w-4" />} {mode === 'login' ? 'Sign in' : 'Create account'}
         </button>
 
-        {googleEnabled && (
-          <>
-            <div className="flex items-center gap-3 text-xs text-ink-500">
-              <span className="h-px flex-1 bg-ink-700" /> or <span className="h-px flex-1 bg-ink-700" />
-            </div>
-            <div className="flex justify-center">
-              <GoogleLogin
-                theme="filled_black"
-                shape="pill"
-                onSuccess={async ({ credential }) => {
-                  try {
-                    done(await googleLogin(credential));
-                  } catch (err) {
-                    toast.error(err.message);
-                  }
-                }}
-                onError={() => toast.error('Google sign-in was cancelled')}
-              />
-            </div>
-          </>
-        )}
+        <div className="flex items-center gap-3 text-xs text-ink-500">
+          <span className="h-px flex-1 bg-ink-700" /> or <span className="h-px flex-1 bg-ink-700" />
+        </div>
+        <div className="flex justify-center">
+          <GoogleLogin
+            theme="filled_black"
+            shape="pill"
+            text={mode === 'login' ? 'signin_with' : 'signup_with'}
+            onSuccess={async ({ credential }) => {
+              try {
+                done(await googleLogin(credential));
+              } catch (err) {
+                toast.error(err.message);
+              }
+            }}
+            onError={() => toast.error('Google sign-in was cancelled')}
+          />
+        </div>
       </form>
 
       <p className="mt-6 text-sm text-ink-400">

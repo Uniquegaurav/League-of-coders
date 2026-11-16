@@ -5,10 +5,10 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Toaster } from 'sonner';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
+import { GOOGLE_CLIENT_ID } from './lib/google';
 import './index.css';
 
 const Router = import.meta.env.VITE_HASH_ROUTER === 'true' ? HashRouter : BrowserRouter;
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const tree = (
   <AuthProvider>
@@ -21,6 +21,6 @@ const tree = (
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {googleClientId ? <GoogleOAuthProvider clientId={googleClientId}>{tree}</GoogleOAuthProvider> : tree}
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>{tree}</GoogleOAuthProvider>
   </React.StrictMode>
 );

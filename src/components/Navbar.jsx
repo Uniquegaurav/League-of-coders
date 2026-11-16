@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { LogOut, Menu, Swords, User as UserIcon, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { tierFor } from '../lib/rank';
 import { Avatar } from './ui';
 
 const LINKS = [
@@ -15,11 +16,11 @@ const LINKS = [
 export function Logo() {
   return (
     <Link to="/" className="flex items-center gap-2.5">
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-neon-500 shadow-glow">
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-neon-500 shadow-glow ring-2 ring-medium/80">
         <Swords className="h-5 w-5 text-white" />
       </span>
       <span className="font-display text-lg font-bold tracking-tight text-white">
-        League<span className="text-ink-400">of</span>Coders
+        League<span className="text-medium">of</span>Coders
       </span>
     </Link>
   );
@@ -39,7 +40,9 @@ function UserMenu({ user, onSignOut }) {
       <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2 rounded-full p-0.5 pr-3 hover:bg-ink-800">
         <Avatar name={user.name} src={user.avatar} size={32} />
         <span className="hidden text-sm font-medium text-ink-200 sm:block">{user.name.split(' ')[0]}</span>
-        <span className="hidden rounded-md bg-ink-800 px-1.5 py-0.5 font-mono text-xs text-brand-400 sm:block">{user.stats.rating}</span>
+        <span className={clsx('hidden rounded-md bg-ink-800 px-1.5 py-0.5 font-mono text-xs sm:block', tierFor(user.stats.rating).color)}>
+          {tierFor(user.stats.rating).name} {user.stats.rating}
+        </span>
       </button>
       {open && (
         <div className="card absolute right-0 mt-2 w-56 overflow-hidden p-1 shadow-2xl">
