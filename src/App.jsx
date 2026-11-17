@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ErrorBoundary from './components/ErrorBoundary';
-import ArenaBackground from './components/game/ArenaBackground';
 import { PageLoader } from './components/ui';
 import { useAuth } from './context/AuthContext';
 import CompeteHome from './pages/CompeteHome';
@@ -54,9 +53,8 @@ export default function App() {
   const fullBleed = pathname.startsWith('/m/');
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-clip">
+    <div className="flex min-h-screen flex-col">
       <ScrollToTop />
-      <ArenaBackground />
       <Navbar />
       <main className={fullBleed ? 'flex-1' : 'mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6'}>
         <ErrorBoundary key={pathname}>
@@ -88,7 +86,7 @@ export default function App() {
         </ErrorBoundary>
       </main>
       {!fullBleed && (
-        <footer className="border-t border-ink-800/80 bg-ink-950/60 py-8 text-center text-xs text-ink-500 backdrop-blur">
+        <footer className="border-t border-ink-800/80 py-8 text-center text-xs text-ink-500">
           League of Coders · Problems and submissions are powered by LeetCode · Built for friendly competition
         </footer>
       )}
