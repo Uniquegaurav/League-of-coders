@@ -107,7 +107,7 @@ function VerifySteps({ username, code, busy, onVerify, onCancel, cancelLabel }) 
       <div>
         <p className="label mb-0.5">LeetCode account</p>
         <p className="text-sm text-ink-300">
-          Confirm that <span className="font-mono text-white">@{username}</span> is yours. Only you can edit its profile summary, so that is how we check.
+          Confirm that <span className="font-mono text-white">@{username}</span> is yours. Only you can edit its profile ReadMe, so that is how we check.
         </p>
       </div>
       <ol className="space-y-3 rounded-xl border border-ink-700 bg-ink-950/50 p-4 text-sm text-ink-300">
@@ -118,11 +118,12 @@ function VerifySteps({ username, code, busy, onVerify, onCancel, cancelLabel }) 
           <CopyCode code={code} />
         </li>
         <li>
-          <span className="mr-2 font-mono text-ink-500">2</span>Paste it into your{' '}
+          <span className="mr-2 font-mono text-ink-500">2</span>Open your{' '}
           <a href="https://leetcode.com/profile/" target="_blank" rel="noreferrer" className="text-brand-400 hover:underline">
-            LeetCode profile summary
-          </a>{' '}
-          and save
+            LeetCode profile settings
+          </a>
+          . Under <span className="text-white">General</span> you will see a <span className="text-white">ReadMe</span> option. Click it, add the code there
+          (or append it to what is already written) and save.
         </li>
         <li>
           <span className="mr-2 font-mono text-ink-500">3</span>Come back and press Verify. You can remove the code afterwards.
