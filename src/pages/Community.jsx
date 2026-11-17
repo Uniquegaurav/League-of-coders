@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { ExternalLink, Hash, Heart, MessageCircle, PenSquare, Send, Swords, Trash2, X } from 'lucide-react';
+import { ExternalLink, Hash, Heart, MessageCircle, Newspaper, PenSquare, Send, Swords, Trash2, Users, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { timeAgo } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
+import { useSocial } from '../context/SocialContext';
 import { Avatar, EmptyState, PageLoader, Spinner } from '../components/ui';
+import FriendsHub from '../components/social/FriendsHub';
+import { FriendsPanel } from '../components/social/FriendBits';
 
 const FILTERS = [
   ['', 'Everything'],
@@ -158,7 +161,7 @@ function PostCard({ post, onChange, onDelete, onTag }) {
   };
 
   return (
-    <article className="card p-5">
+    <article className="hud-panel animate-rise-in p-5 transition hover:border-ink-600">
       <header className="flex items-start gap-3">
         <Avatar name={post.author.name} src={post.author.avatar} size={40} />
         <div className="min-w-0 flex-1">
@@ -213,7 +216,7 @@ function PostCard({ post, onChange, onDelete, onTag }) {
   );
 }
 
-export default function Community() {
+function Feed() {
   const { user } = useAuth();
   const [kind, setKind] = useState('');
   const [tag, setTag] = useState('');
@@ -222,10 +225,6 @@ export default function Community() {
   const [total, setTotal] = useState(0);
   const [composing, setComposing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-
-  useEffect(() => {
-    document.title = 'Community · League of Coders';
-  }, []);
 
   const load = useCallback(
     async (nextPage) => {
@@ -248,12 +247,10 @@ export default function Community() {
   const replace = (updated) => setPosts((ps) => ps.map((p) => (p.id === updated.id ? updated : p)));
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="min-w-0 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold text-white">Community</h1>
-          <p className="mt-1 text-ink-400">Battle recaps, approaches, challenges and announcements.</p>
-        </div>
+        <p className="text-ink-400">Battle recaps, approaches, challenges and announcements.</p>
         {user ? (
           !composing && (
             <button className="btn-primary" onClick={() => setComposing(true)}>
@@ -318,6 +315,51 @@ export default function Community() {
           Start the conversation, or finish a battle and share the result.
         </EmptyState>
       )}
+    </div>
+    <aside className="hidden space-y-5 lg:block">
+      <FriendsPanel />
+    </aside>
+    </div>
+  );
+}
+
+const TABS = [
+  ['feed', 'Feed', Newspaper],
+  ['friends', 'Friends', Users],
+];
+
+export default function Community() {
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') === 'friends' ? 'friends' : 'feed';
+  const social = useSocial();
+
+  useEffect(() => {
+    document.title = 'Community · League of Coders';
+  }, []);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="hud-title text-neon-400">Guild hall</p>
+          <h1 className="font-display text-3xl font-black text-white sm:text-4xl">Community</h1>
+        </div>
+        <div className="inline-flex rounded-xl border border-ink-700 bg-ink-950/60 p-1">
+          {TABS.map(([key, label, Icon]) => (
+            <button
+              key={key}
+              onClick={() => setParams(key === 'feed' ? {} : { tab: key }, { replace: true })}
+              className={clsx('relative inline-flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-semibold transition', tab === key ? 'bg-ink-700 text-white' : 'text-ink-400 hover:text-white')}
+            >
+              <Icon className="h-4 w-4" /> {label}
+              {key === 'friends' && social?.incoming.length > 0 && (
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-hard px-1 text-[10px] text-white">{social.incoming.length}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+      {tab === 'friends' ? <FriendsHub /> : <Feed />}
     </div>
   );
 }

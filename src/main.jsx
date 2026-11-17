@@ -5,6 +5,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Toaster } from 'sonner';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
+import { SocialProvider } from './context/SocialContext';
 import { GOOGLE_CLIENT_ID } from './lib/google';
 import './index.css';
 
@@ -13,7 +14,9 @@ const Router = import.meta.env.VITE_HASH_ROUTER === 'true' ? HashRouter : Browse
 const tree = (
   <AuthProvider>
     <Router>
-      <App />
+      <SocialProvider>
+        <App />
+      </SocialProvider>
     </Router>
     <Toaster theme="dark" position="bottom-right" richColors closeButton />
   </AuthProvider>
