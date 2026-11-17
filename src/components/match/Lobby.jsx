@@ -31,11 +31,11 @@ function useAction(setMatch) {
 function SettingsSummary({ match }) {
   const s = match.settings;
   const rows = [
-    [Clock, 'Duration', `${s.durationMin} minutes`],
+    [Clock, s.solo ? 'Time limit' : 'Duration', s.solo ? `${s.durationMin} min from the mix` : `${s.durationMin} minutes`],
     [Layers, 'Problems', <ProblemMix key="mix" settings={s} />],
     [Tags, 'Pool', s.pool === 'all' ? 'All free LeetCode' : 'Interview classics'],
-    [Users, 'Players', `up to ${s.maxPlayers}`],
-    [match.visibility === 'public' ? Globe : Lock, 'Visibility', match.visibility === 'public' ? 'Public lobby' : 'Invite only'],
+    [Users, 'Players', s.solo ? 'Just you' : `up to ${s.maxPlayers}`],
+    ...(s.solo ? [] : [[match.visibility === 'public' ? Globe : Lock, 'Visibility', match.visibility === 'public' ? 'Public lobby' : 'Invite only']]),
   ];
   return (
     <div className="space-y-2.5">
@@ -65,7 +65,8 @@ export default function Lobby({ match, messages, me, user, setMatch }) {
   const isHost = user && match.host === user.id;
   const [busy, run] = useAction(setMatch);
   const [editing, setEditing] = useState(null);
-  const slots = Math.max(0, match.settings.maxPlayers - match.participants.length);
+  const solo = !!match.settings.solo;
+  const slots = solo ? 0 : Math.max(0, match.settings.maxPlayers - match.participants.length);
 
   const saveSettings = async () => {
     const res = await run('settings', () => api.matches.update(match.code, editing), 'Settings updated');
@@ -79,7 +80,11 @@ export default function Lobby({ match, messages, me, user, setMatch }) {
           <div>
             <StatusPill status="lobby" />
             <h1 className="mt-2 font-display text-3xl font-bold text-white">{match.name}</h1>
-            <p className="text-sm text-ink-400">Waiting for the host to start · {match.participants.length} player(s) ready</p>
+            <p className="text-sm text-ink-400">
+              {solo
+                ? `Solo test. ${match.settings.durationMin} minutes on the clock. Start when you are ready.`
+                : `Waiting for the host to start. ${match.participants.length} in the room.`}
+            </p>
           </div>
           <div className="flex gap-2">
             {me ? (
@@ -103,7 +108,7 @@ export default function Lobby({ match, messages, me, user, setMatch }) {
             )}
             {isHost && (
               <button className="btn-primary" disabled={!!busy} onClick={() => run('start', () => api.matches.start(match.code))}>
-                {busy === 'start' ? <Spinner className="h-4 w-4" /> : <Play className="h-4 w-4" />} Start battle
+                {busy === 'start' ? <Spinner className="h-4 w-4" /> : <Play className="h-4 w-4" />} {solo ? 'Start test' : 'Start battle'}
               </button>
             )}
           </div>
@@ -164,7 +169,7 @@ export default function Lobby({ match, messages, me, user, setMatch }) {
 
         <div className="card p-5">
           <div className="mb-4 flex items-center justify-between">
-            <p className="section-title">Battle settings</p>
+            <p className="section-title">{solo ? 'Test settings' : 'Battle settings'}</p>
             {isHost && !editing && (
               <button className="btn-ghost btn-sm" onClick={() => setEditing({ name: match.name, visibility: match.visibility, settings: match.settings })}>
                 <Settings2 className="h-4 w-4" /> Edit
@@ -190,7 +195,15 @@ export default function Lobby({ match, messages, me, user, setMatch }) {
       </div>
 
       <div className="space-y-6">
-        <InviteBox code={match.code} name={match.name} />
+        {solo ? (
+          <div className="card p-5 text-sm text-ink-300">
+            <p className="section-title mb-2">Clock</p>
+            <p className="font-display text-3xl font-bold text-white">{match.settings.durationMin} min</p>
+            <p className="mt-2 text-ink-400">Easy 10 min, medium 20, hard 35. The server sets this when you save the mix.</p>
+          </div>
+        ) : (
+          <InviteBox code={match.code} name={match.name} />
+        )}
         <ChatPanel code={match.code} messages={messages} className="h-[460px]" />
       </div>
     </div>

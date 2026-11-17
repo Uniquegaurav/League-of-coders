@@ -23,8 +23,8 @@ export default {
         hard: '#fb7185',
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['"Space Grotesk"', 'Inter', 'sans-serif'],
+        sans: ['Satoshi', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Satoshi', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
       boxShadow: {

@@ -40,7 +40,7 @@ function NotFound() {
   return (
     <div className="mx-auto max-w-md py-24 text-center">
       <p className="font-display text-6xl font-bold text-white">404</p>
-      <p className="mt-2 text-ink-400">This page wandered off the arena.</p>
+      <p className="mt-2 text-ink-400">That page does not exist.</p>
       <Link to="/" className="btn-primary mt-6">
         Back to Compete
       </Link>

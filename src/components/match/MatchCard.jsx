@@ -52,6 +52,7 @@ export default function MatchCard({ match, joined }) {
           <Clock className="h-3.5 w-3.5" /> {match.settings.durationMin} min
         </span>
         <ProblemMix settings={match.settings} />
+        {match.settings.solo && <span className="chip">Solo</span>}
         {match.settings.pool === 'all' && <span className="chip">All LeetCode</span>}
         {match.status === 'finished' && match.finishedAt && <span>{timeAgo(match.finishedAt)}</span>}
       </div>
