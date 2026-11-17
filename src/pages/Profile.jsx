@@ -2,17 +2,15 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { ArrowRight, Award, Check, Copy, ExternalLink, Flame, History, Link2, Lock, ShieldCheck, Unlink } from 'lucide-react';
+import { ArrowRight, Check, Copy, ExternalLink, History, Link2, ShieldCheck, Unlink } from 'lucide-react';
 import { api } from '../lib/api';
-import { tierFor, tierProgress } from '../lib/rank';
-import { achievementsFor, practiceOf, titleFor } from '../lib/progression';
-import RankEmblem from '../components/game/RankEmblem';
-import { CountUp, XpBar } from '../components/game/fx';
-import { FriendButton } from '../components/social/FriendBits';
+import { tierFor } from '../lib/rank';
 import { timeAgo, ordinal } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
-import { Avatar, EmptyState, PageLoader, Spinner, VerifiedBadge } from '../components/ui';
+import { Avatar, EmptyState, PageLoader, ProgressBar, Spinner, VerifiedBadge } from '../components/ui';
 import { ProblemMix } from '../components/match/MatchCard';
+import { FriendButton } from '../components/social/FriendBits';
+import { milestonesFor } from '../lib/progression';
 
 function LeetCodeSettings() {
   const { user, setUser } = useAuth();
@@ -180,96 +178,54 @@ export default function Profile() {
   const { player, history } = data;
   const s = player.stats;
   const tier = tierFor(s.rating);
-  const promo = tierProgress(s.rating);
-  const lvl = practiceOf(player);
-  const badges = achievementsFor(isMe ? { ...player, solvedCount: user.solvedCount } : player);
-  const unlocked = badges.filter((b) => b.unlocked).length;
   const stats = [
     ['Rating', s.rating, 'text-brand-400'],
+    ['Tier', tier.name, tier.color],
     ['Battles', s.matches],
     ['Wins', s.wins],
-    ['Win rate', s.matches ? Math.round((s.wins / s.matches) * 100) : 0, null, '%'],
+    ['Win rate', `${s.matches ? Math.round((s.wins / s.matches) * 100) : 0}%`],
     ['Problems solved', s.solved],
     ['Total points', s.points],
-    ['Best streak', lvl.bestStreak, 'text-orange-400'],
   ];
 
   return (
     <div className="space-y-6">
-      <div className="hud-panel relative overflow-hidden p-6 sm:p-8">
+      <div className="card relative overflow-hidden p-6 sm:p-8">
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand-500/15 blur-3xl" />
-        <div className="relative flex flex-wrap items-center gap-6">
-          <div className="relative">
-            <Avatar name={player.name} src={player.avatar} size={88} />
-            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-ink-950 px-2 py-0.5 font-mono text-xs font-bold text-brand-400 ring-1 ring-brand-500/60">
-              Lv {lvl.level}
-            </span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="flex flex-wrap items-center gap-2 font-display text-3xl font-black text-white">
+        <div className="flex flex-wrap items-center gap-5">
+          <Avatar name={player.name} src={player.avatar} size={80} />
+          <div>
+            <h1 className="flex items-center gap-2 font-display text-3xl font-bold text-white">
               {player.name} <VerifiedBadge verified={player.leetcode?.verified} />
             </h1>
             <p className="text-sm text-ink-400">
-              {titleFor(lvl.level)} · {player.leetcode ? `@${player.leetcode.username} on LeetCode` : 'No LeetCode linked'} · joined {timeAgo(player.createdAt)}
+              {player.leetcode ? `@${player.leetcode.username} on LeetCode` : 'No LeetCode linked'} · joined {timeAgo(player.createdAt)}
             </p>
-            <div className="mt-3 max-w-sm">
-              <p className="mb-1 flex justify-between text-[11px] text-ink-500">
-                <span>{lvl.xp} XP</span>
-                <span>{lvl.nextLevelXp} XP for level {lvl.level + 1}</span>
-              </p>
-              <XpBar pct={lvl.pct} />
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <FriendButton playerId={player.id} />
-              {lvl.streak > 0 && (
-                <span className="chip border-orange-500/40 text-orange-400">
-                  <Flame className="h-3.5 w-3.5 animate-flicker" /> {lvl.streak} day streak
-                </span>
-              )}
-            </div>
           </div>
-          <div className="text-center">
-            <RankEmblem tier={tier} size={110} />
-            <p className={clsx('mt-1 font-display text-lg font-black uppercase tracking-wider', tier.color)}>{tier.name}</p>
-            {promo.next && <p className="text-[11px] text-ink-500">{promo.toGo} to {promo.next.name}</p>}
-          </div>
+          <FriendButton playerId={player.id} className="sm:ml-auto" />
         </div>
-        <div className="relative mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
-          {stats.map(([label, value, color, suffix]) => (
+        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
+          {stats.map(([label, value, color]) => (
             <div key={label} className="rounded-xl border border-ink-800 bg-ink-950/40 p-4">
-              <p className={clsx('font-display text-2xl font-bold', color || 'text-white')}>
-                <CountUp value={value} />
-                {suffix}
-              </p>
+              <p className={clsx('font-display text-2xl font-bold', color || 'text-white')}>{value}</p>
               <p className="text-xs uppercase tracking-wider text-ink-500">{label}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="hud-panel p-6">
-        <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-bold text-white">
-          <Award className="h-5 w-5 text-medium" /> Achievements
-          <span className="font-mono text-sm text-ink-500">
-            {unlocked}/{badges.length}
-          </span>
-        </h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {badges.map((b, i) => (
-            <div
-              key={b.id}
-              title={b.desc}
-              className={clsx(
-                'animate-rise-in rounded-xl border p-3 text-center transition',
-                b.unlocked ? 'lift shine border-ink-700 bg-ink-950/50' : 'border-dashed border-ink-800 opacity-50 grayscale'
-              )}
-              style={{ animationDelay: `${i * 40}ms` }}
-            >
-              <span className={clsx('mx-auto flex h-11 w-11 items-center justify-center rounded-full', b.unlocked ? 'bg-ink-800 shadow-glow' : 'bg-ink-900')}>
-                {b.unlocked ? <b.icon className={clsx('h-5 w-5', b.color)} /> : <Lock className="h-4 w-4 text-ink-600" />}
-              </span>
-              <p className="mt-2 text-xs font-bold text-white">{b.name}</p>
-              <p className="text-[10px] leading-4 text-ink-500">{b.desc}</p>
+      <div className="card p-6">
+        <p className="section-title mb-4">Milestones</p>
+        <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+          {milestonesFor(isMe ? { ...player, solvedCount: user.solvedCount } : player).map((m) => (
+            <div key={m.name}>
+              <p className="mb-1 flex justify-between text-sm">
+                <span className={m.done ? 'text-white' : 'text-ink-400'}>{m.name}</span>
+                <span className={clsx('font-mono text-xs', m.done ? 'text-easy' : 'text-ink-500')}>
+                  {m.done ? 'Done' : `${m.value}/${m.target}`}
+                </span>
+              </p>
+              <ProgressBar value={m.value} max={m.target} barClassName={m.done ? 'bg-easy' : 'bg-brand-500'} />
             </div>
           ))}
         </div>

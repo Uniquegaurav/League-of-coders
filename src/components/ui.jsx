@@ -121,3 +121,12 @@ export function Stepper({ value, onChange, min = 0, max = 10, disabled }) {
     </div>
   );
 }
+
+export function ProgressBar({ value = 0, max = 1, className, barClassName = 'bg-brand-500' }) {
+  const pct = max ? Math.min(100, Math.round((value / max) * 100)) : 0;
+  return (
+    <div className={clsx('h-1.5 overflow-hidden rounded-full bg-ink-800', className)}>
+      <div className={clsx('h-full rounded-full transition-[width] duration-500', barClassName)} style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
