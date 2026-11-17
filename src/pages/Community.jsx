@@ -7,7 +7,8 @@ import { api } from '../lib/api';
 import { timeAgo } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
 import { useSocial } from '../context/SocialContext';
-import { Avatar, EmptyState, PageLoader, Spinner } from '../components/ui';
+import { Avatar, EmptyState, PageBanner, PageLoader, Spinner } from '../components/ui';
+import fiber from '../assets/bg/fiber.jpg';
 import FriendsHub from '../components/social/FriendsHub';
 import { FriendsPanel } from '../components/social/FriendBits';
 
@@ -341,25 +342,28 @@ export default function Community() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold text-white">Community</h1>
-        </div>
-        <div className="inline-flex rounded-xl border border-ink-700 bg-ink-950/60 p-1">
-          {TABS.map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setParams(key === 'feed' ? {} : { tab: key }, { replace: true })}
-              className={clsx('relative inline-flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-semibold transition', tab === key ? 'bg-ink-700 text-white' : 'text-ink-400 hover:text-white')}
-            >
-              {label}
-              {key === 'friends' && social?.incoming.length > 0 && (
-                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-hard px-1 text-[10px] text-white">{social.incoming.length}</span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+      <PageBanner
+        image={fiber}
+        title="Community"
+        actions={
+          <div className="inline-flex rounded-xl border border-ink-700 bg-ink-950/60 p-1">
+            {TABS.map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setParams(key === 'feed' ? {} : { tab: key }, { replace: true })}
+                className={clsx('relative inline-flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-semibold transition', tab === key ? 'bg-ink-700 text-white' : 'text-ink-400 hover:text-white')}
+              >
+                {label}
+                {key === 'friends' && social?.incoming.length > 0 && (
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-hard px-1 text-[10px] text-white">{social.incoming.length}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        }
+      >
+        Share results, follow friends and find your next rival.
+      </PageBanner>
       {tab === 'friends' ? <FriendsHub /> : <Feed />}
     </div>
   );

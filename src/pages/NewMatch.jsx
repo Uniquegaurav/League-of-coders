@@ -7,7 +7,8 @@ import { useAuth } from '../context/AuthContext';
 import MatchSettingsForm, { DEFAULT_SETTINGS } from '../components/match/MatchSettingsForm';
 import ScoringRules from '../components/match/ScoringRules';
 import { soloClock } from '../lib/soloTime';
-import { Spinner } from '../components/ui';
+import { InfoTip, Spinner } from '../components/ui';
+import hexRed from '../assets/bg/hex-red.jpg';
 
 const STORAGE_KEY = 'loc.lastMatchSettings';
 
@@ -72,7 +73,13 @@ export default function NewMatch() {
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
       <form onSubmit={submit} className="card p-6 sm:p-8">
-        <div className="mb-8">
+        <div className="relative -mx-6 -mt-6 mb-8 rounded-t-2xl px-6 pb-8 pt-6 sm:-mx-8 sm:-mt-8 sm:px-8 sm:pt-8">
+          <div aria-hidden className="absolute inset-0 overflow-hidden rounded-t-2xl">
+            <img src={hexRed} alt="" className="h-full w-full object-cover object-right" />
+            <div className="absolute inset-0 bg-gradient-to-r from-ink-950/95 via-ink-950/80 to-ink-950/30" />
+            <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-ink-900 to-transparent" />
+          </div>
+          <div className="relative">
           <div className="mb-5 inline-flex rounded-xl border border-ink-700 bg-ink-950/60 p-1">
             <button
               type="button"
@@ -89,12 +96,18 @@ export default function NewMatch() {
               Battle
             </button>
           </div>
-          <h1 className="font-display text-3xl font-bold text-white">{solo ? 'Set up your test' : 'Set up your battle'}</h1>
-          <p className="mt-1 text-ink-400">
-            {solo
-              ? `Clock is ${clock.minutes || 0} min from this mix. Easy is 10, medium is 20, hard is 35. Problems stay hidden until you start.`
-              : 'Problems are drawn and shuffled when you press start. Nobody sees them early.'}
+          <h1 className="flex items-center gap-2 font-display text-3xl font-bold text-white">
+            {solo ? 'Set up your test' : 'Set up your battle'}
+            <InfoTip label="How this works">
+              {solo
+                ? 'Each problem adds time to the clock: 10 minutes for easy, 20 for medium and 35 for hard. Problems stay hidden until you start, and solo tests never change your rating.'
+                : 'Problems are drawn and shuffled only when you press start, so nobody sees them early. Battles with 2 or more players are rated.'}
+            </InfoTip>
+          </h1>
+          <p className="mt-1 text-ink-300">
+            {solo ? `Pick your mix. Clock: ${clock.minutes || 0} min.` : 'Choose the rules and invite your rivals.'}
           </p>
+          </div>
         </div>
 
         {!user?.leetcode?.verified && (

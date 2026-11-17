@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { toast } from 'sonner';
 import { Check, ChevronLeft, ChevronRight, Search, Swords } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { streakOf } from '../lib/progression';
-import { DifficultyBadge, EmptyState, ProgressBar, Spinner } from '../components/ui';
+import { DifficultyBadge, EmptyState, PageBanner, ProgressBar, Spinner } from '../components/ui';
+import circuit from '../assets/bg/circuit.jpg';
 
 const LIMIT = 30;
 const TABS = [
@@ -144,7 +145,6 @@ function ProblemRow({ problem, done, canTrack, busy, onToggle }) {
       <SolvedCheckbox
         checked={done}
         busy={busy}
-        disabled={!canTrack}
         onClick={() => onToggle(problem.slug)}
         title={canTrack ? (done ? 'Mark as not solved' : 'Mark as solved') : 'Sign in to track progress'}
       />
@@ -164,6 +164,7 @@ function ProblemRow({ problem, done, canTrack, busy, onToggle }) {
 
 export default function Practice() {
   const { user, setUser } = useAuth();
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({ pool: 'curated', difficulty: '', topic: '', search: '' });
   const [tab, setTab] = useState('todo');
   const [page, setPage] = useState(1);
@@ -266,7 +267,15 @@ export default function Practice() {
     setPage(1);
   };
 
+  const askToSignIn = () =>
+    toast('Sign in to track solved problems', {
+      id: 'practice-sign-in',
+      description: 'Your progress is saved to your account.',
+      action: { label: 'Sign in', onClick: () => navigate('/login', { state: { from: '/practice' } }) },
+    });
+
   const setMark = async (slug, next, { quiet = false } = {}) => {
+    if (!user) return askToSignIn();
     setBusy((b) => new Set(b).add(slug));
     setSolved((s) => {
       const copy = new Set(s);
@@ -305,19 +314,24 @@ export default function Practice() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold text-white">Practice</h1>
-          <p className="mt-1 max-w-2xl text-ink-400">
-            Warm up on the same problem bank battles draw from. Tick a problem once LeetCode accepts it. Battles can skip solved problems when you opt in.
-          </p>
-        </div>
-        <Link to="/new?mode=battle" className="btn-primary">
-          <Swords className="h-4 w-4" /> Turn it into a battle
-        </Link>
-      </div>
+      <PageBanner
+        image={circuit}
+        title="Practice"
+        info={
+          <>
+            These are the same problems battles draw from. Tick a problem once LeetCode accepts it. When you host a battle you can choose to skip problems you have already solved.
+          </>
+        }
+        actions={
+          <Link to="/new?mode=battle" className="btn-primary">
+            <Swords className="h-4 w-4" /> Turn it into a battle
+          </Link>
+        }
+      >
+        Sharpen your skills and keep track of what you have solved.
+      </PageBanner>
 
-      <DailyProblem daily={daily} done={daily?.done || (daily?.problem && solved.has(daily.problem.slug))} onMark={user ? (slug) => setMark(slug, true) : null} />
+      <DailyProblem daily={daily} done={daily?.done || (daily?.problem && solved.has(daily.problem.slug))} onMark={(slug) => setMark(slug, true)} />
 
       {user && <ProgressPanel progress={progress} user={user} activeTopic={filters.topic} onTopic={(topic) => update({ topic, pool: 'curated' })} />}
 

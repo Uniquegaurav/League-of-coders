@@ -6,7 +6,8 @@ import { api } from '../lib/api';
 import { tierFor } from '../lib/rank';
 import usePolling from '../hooks/usePolling';
 import { useAuth } from '../context/AuthContext';
-import { Avatar, EmptyState, PageLoader, VerifiedBadge } from '../components/ui';
+import { Avatar, EmptyState, PageBanner, PageLoader, VerifiedBadge } from '../components/ui';
+import lightRays from '../assets/bg/light-rays.jpg';
 
 export default function Leaderboard() {
   const { user } = useAuth();
@@ -20,10 +21,19 @@ export default function Leaderboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-bold text-white">Leaderboard</h1>
-        <p className="mt-1 text-ink-400">Everyone starts at 1200. Rated battles (2+ players) move your rating with multiplayer Elo.</p>
-      </div>
+      <PageBanner
+        image={lightRays}
+        position="left top"
+        flip
+        title="Leaderboard"
+        info={
+          <>
+            Everyone starts at 1200. Rated battles (2 or more players) move your rating using multiplayer Elo: beating higher-rated players gains more. Solo tests never change it.
+          </>
+        }
+      >
+        The top players across every rated battle.
+      </PageBanner>
       {data?.length ? (
         <div className="card overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
