@@ -315,7 +315,7 @@ export default function Community() {
         </div>
       ) : (
         <EmptyState icon={MessageCircle} title="Nothing here yet">
-          Start the conversation — or finish a battle and share the result.
+          Start the conversation, or finish a battle and share the result.
         </EmptyState>
       )}
     </div>

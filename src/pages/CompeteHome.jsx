@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
-import { ArrowRight, Crown, Link2, Radio, Swords, Timer, Trophy, UserPlus } from 'lucide-react';
+import { ArrowRight, Clock, Crown, Link2, Swords, Timer, Trophy, UserPlus } from 'lucide-react';
 import { api } from '../lib/api';
 import { tierFor } from '../lib/rank';
 import { useAuth } from '../context/AuthContext';
@@ -12,15 +12,6 @@ import JoinByCode from '../components/match/JoinByCode';
 import ScoringRules from '../components/match/ScoringRules';
 import { Avatar, EmptyState, Spinner, VerifiedBadge } from '../components/ui';
 
-function Stat({ value, label }) {
-  return (
-    <div>
-      <p className="font-display text-2xl font-bold text-white">{value ?? '—'}</p>
-      <p className="text-xs uppercase tracking-wider text-ink-400">{label}</p>
-    </div>
-  );
-}
-
 function LinkLeetCodeBanner() {
   return (
     <div className="card flex flex-col items-start justify-between gap-4 border-medium/30 bg-medium/5 p-5 sm:flex-row sm:items-center">
@@ -28,7 +19,7 @@ function LinkLeetCodeBanner() {
         <Link2 className="mt-0.5 h-5 w-5 shrink-0 text-medium" />
         <div>
           <p className="font-semibold text-white">Link your LeetCode account to start competing</p>
-          <p className="text-sm text-ink-400">We read your accepted submissions to score matches automatically — no copy-pasting.</p>
+          <p className="text-sm text-ink-400">We read your accepted submissions and score the match from those. Nothing to paste in.</p>
         </div>
       </div>
       <Link to="/u/me" className="btn-secondary shrink-0">
@@ -40,18 +31,17 @@ function LinkLeetCodeBanner() {
 
 const STEPS = [
   { icon: Link2, title: 'Link LeetCode', body: 'Connect your username once. Solves are read from your accepted submissions.' },
-  { icon: Swords, title: 'Create or join', body: 'Pick difficulty mix, topics and duration. Share the invite link.' },
+  { icon: Swords, title: 'Create or join', body: 'Pick the difficulty mix, topics, and duration, then share the invite link.' },
   { icon: Timer, title: 'Race the clock', body: 'Everyone gets the same shuffled set. Read it here, submit on LeetCode.' },
-  { icon: Trophy, title: 'Climb the ranks', body: 'Live scoreboard, first-solve bonuses and Elo rating after every battle.' },
+  { icon: Trophy, title: 'Climb the ranks', body: 'Live scoreboard, first-solve bonuses, and Elo after every rated battle.' },
 ];
 
 export default function CompeteHome() {
   const { user } = useAuth();
   useEffect(() => {
-    document.title = 'League of Coders — Real-time coding battles';
+    document.title = 'League of Coders';
   }, []);
 
-  const stats = usePolling(() => api.matches.stats(), 30000);
   const open = usePolling(() => api.matches.open().then((r) => r.matches), 8000);
   const recent = usePolling(() => api.matches.recent(6).then((r) => r.matches), 60000);
   const top = usePolling(() => api.users.leaderboard(5).then((r) => r.players), 60000);
@@ -64,46 +54,29 @@ export default function CompeteHome() {
 
   return (
     <div className="space-y-12">
-      {/* Hero */}
-      <section className="grid items-center gap-10 lg:grid-cols-[1.2fr_1fr]">
-        <div>
-          <span className="chip border-brand-500/40 bg-brand-500/10 text-brand-400">
-            <Radio className="h-3 w-3" /> {stats.data?.live ? `${stats.data.live} battle(s) live right now` : 'Real-time coding battles'}
-          </span>
-          <h1 className="mt-5 font-display text-4xl font-bold leading-tight text-white sm:text-6xl">
-            Code. Compete. <span className="gradient-text">Conquer.</span>
-          </h1>
+      <section className="grid items-center overflow-hidden rounded-3xl border border-ink-700 bg-ink-900 lg:grid-cols-[minmax(0,1.35fr)_minmax(260px,0.65fr)]">
+        <div className="px-6 py-10 sm:px-10 sm:py-14">
+          <h1 className="max-w-xl font-display text-4xl font-bold leading-tight text-white sm:text-5xl">Code. Compete.</h1>
           <p className="mt-4 max-w-xl text-lg text-ink-300">
-            Spin up a lobby, invite your friends with a link, and race through the same set of LeetCode problems. Every
-            accepted submission is verified and scored live.
+            Open a lobby, send the invite link, and race the same LeetCode problems. Scores come from accepted submissions.
           </p>
-          <div className="mt-8 flex max-w-xl flex-col gap-3 sm:flex-row">
-            <Link to={user ? '/new' : '/login'} state={user ? undefined : { from: '/new' }} className="btn-primary px-6 py-3 text-base">
+          {user && (
+            <p className="mt-4 text-sm text-ink-300">
+              You are <span className={tierFor(user.stats.rating).color}>{tierFor(user.stats.rating).name}</span>
+              <span className="font-mono text-ink-200"> {user.stats.rating}</span>
+              <span className="text-ink-500"> · {user.stats.wins} wins in {user.stats.matches} rated battles</span>
+            </p>
+          )}
+          <div className="mt-8 flex max-w-xl flex-col gap-3 sm:flex-row sm:items-center">
+            <Link to={user ? '/new?mode=battle' : '/login'} state={user ? undefined : { from: '/new?mode=battle' }} className="btn-primary px-6 py-3 text-base">
               <Swords className="h-5 w-5" /> Start a battle
             </Link>
             <div className="flex-1">
               <JoinByCode />
             </div>
           </div>
-          <div className="mt-10 flex gap-10">
-            <Stat value={stats.data?.players} label="Players" />
-            <Stat value={stats.data?.matches} label="Battles fought" />
-            <Stat value={stats.data?.live} label="Live now" />
-          </div>
         </div>
-
-        <div className="space-y-4">
-          <div className="relative overflow-hidden rounded-2xl border border-medium/30 bg-gradient-to-b from-[#221c4a] to-ink-900 p-3 shadow-[0_0_48px_-16px_rgba(251,191,36,0.45)]">
-            <p className="px-2 pt-1 text-center font-display text-[11px] font-semibold uppercase tracking-[0.28em] text-medium">
-              Ranked queue
-            </p>
-            <img src={heroCoder} alt="A coder at a desk, ready to queue" className="mx-auto max-h-80 w-full object-contain" />
-          </div>
-          <div className="card p-5">
-            <p className="section-title mb-4">How scoring works</p>
-            <ScoringRules compact />
-          </div>
-        </div>
+        <img src={heroCoder} alt="" className="hero-art mx-auto h-auto min-w-0 w-full max-w-full object-contain px-6 pb-6 lg:px-4 lg:py-6 lg:pr-8" />
       </section>
 
       {user && !user.leetcode && <LinkLeetCodeBanner />}
@@ -119,19 +92,45 @@ export default function CompeteHome() {
         </section>
       )}
 
-      {/* Lobbies */}
-      <section>
-        <div className="mb-4 flex items-end justify-between">
+      <section className="card flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center">
+        <div className="flex gap-4">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-medium/10 text-medium">
+            <Clock className="h-5 w-5" />
+          </span>
           <div>
-            <h2 className="section-title">Open lobbies</h2>
-            <p className="text-sm text-ink-400">Public battles waiting for challengers</p>
+            <h2 className="font-semibold text-white">Solo timed test</h2>
+            <p className="mt-1 max-w-xl text-sm text-ink-400">
+              Pick how many easy, medium, and hard problems you want. The clock is set from that mix: 10, 20, and 35 minutes. It is private and does not change your rating.
+            </p>
           </div>
-          {open.loading && <Spinner className="h-4 w-4 text-ink-500" />}
+        </div>
+        <Link to={user ? '/new?mode=solo' : '/login'} state={user ? undefined : { from: '/new?mode=solo' }} className="btn-secondary shrink-0">
+          Start a solo test <ArrowRight className="h-4 w-4" />
+        </Link>
+      </section>
+
+      {/* Lobbies */}
+      <section className="overflow-hidden rounded-2xl border border-ink-700">
+        <div className="flex items-center justify-between border-b border-ink-700 bg-ink-900 px-5 py-3">
+          <div>
+            <h2 className="section-title">Lobby</h2>
+            <p className="text-sm text-ink-400">Public battles waiting for someone to join</p>
+          </div>
+          <div className="flex items-center gap-3 text-xs text-ink-400">
+            {live.length > 0 && (
+              <span className="inline-flex items-center gap-1.5 font-semibold text-hard">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-hard" /> {live.length} live
+              </span>
+            )}
+            {open.loading && <Spinner className="h-4 w-4 text-ink-500" />}
+          </div>
         </div>
         {lobbies.length ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
             {lobbies.map((m) => (
-              <MatchCard key={m.code} match={m} />
+              <div key={m.code} className="room-card">
+                <MatchCard match={m} />
+              </div>
             ))}
           </div>
         ) : (
@@ -140,12 +139,12 @@ export default function CompeteHome() {
               icon={UserPlus}
               title="No open lobbies right now"
               action={
-                <Link to={user ? '/new' : '/login'} className="btn-primary btn-sm">
+                <Link to={user ? '/new?mode=battle' : '/login'} state={user ? undefined : { from: '/new?mode=battle' }} className="btn-primary btn-sm">
                   Host the first one
                 </Link>
               }
             >
-              Create a public lobby and it will show up here for anyone to join — or make it private and share the invite link.
+              Create a public lobby and it shows up here. Private rooms stay off this list. Share the invite link instead.
             </EmptyState>
           )
         )}
@@ -153,7 +152,7 @@ export default function CompeteHome() {
 
       {live.length > 0 && (
         <section>
-          <h2 className="section-title mb-4">Live now — spectate</h2>
+          <h2 className="section-title mb-4">Live now</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {live.map((m) => (
               <MatchCard key={m.code} match={m} />
@@ -162,14 +161,13 @@ export default function CompeteHome() {
         </section>
       )}
 
-      {/* How it works */}
       <section>
         <h2 className="section-title mb-4">How it works</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map(({ icon: Icon, title, body }, i) => (
             <div key={title} className="card p-5">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/20 to-neon-500/10 text-brand-400">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400">
                   <Icon className="h-5 w-5" />
                 </span>
                 <span className="font-mono text-xs text-ink-500">0{i + 1}</span>
@@ -179,6 +177,11 @@ export default function CompeteHome() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="card p-6">
+        <h2 className="section-title mb-4">How scoring works</h2>
+        <ScoringRules />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">

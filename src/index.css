@@ -7,11 +7,7 @@
     color-scheme: dark;
   }
   body {
-    background:
-      radial-gradient(1200px 600px at 10% -10%, rgba(124, 92, 255, 0.12), transparent 60%),
-      radial-gradient(900px 500px at 100% 0%, rgba(34, 211, 238, 0.08), transparent 60%),
-      #06070b;
-    background-attachment: fixed;
+    background: #0c0e13;
     min-height: 100vh;
   }
   ::selection {
@@ -35,7 +31,16 @@
       focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-glow hover:brightness-110;
+    @apply btn bg-brand-500 text-white hover:bg-brand-600;
+  }
+  .hero-art {
+    animation: hero-float 7s ease-in-out infinite;
+  }
+  .room-card {
+    @apply transition duration-200;
+  }
+  .room-card:hover {
+    transform: translateY(-3px);
   }
   .btn-secondary {
     @apply btn border border-ink-600 bg-ink-800 text-ink-200 hover:border-ink-500 hover:bg-ink-700;
@@ -53,6 +58,15 @@
     @apply w-full rounded-xl border border-ink-700 bg-ink-950/60 px-3.5 py-2.5 text-sm text-white placeholder:text-ink-500
       transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30;
   }
+  select.input {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 2.75rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b93a7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+    background-size: 1rem 1rem;
+  }
   .label {
     @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-ink-400;
   }
@@ -64,6 +78,16 @@
   }
   .gradient-text {
     @apply bg-gradient-to-r from-brand-400 via-fuchsia-300 to-neon-400 bg-clip-text text-transparent;
+  }
+}
+
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
   }
 }
 

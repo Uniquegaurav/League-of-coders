@@ -1,32 +1,51 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ArrowRight, Link2, Swords } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import MatchSettingsForm, { DEFAULT_SETTINGS } from '../components/match/MatchSettingsForm';
 import ScoringRules from '../components/match/ScoringRules';
+import { soloClock } from '../lib/soloTime';
 import { Spinner } from '../components/ui';
 
 const STORAGE_KEY = 'loc.lastMatchSettings';
 
+function withMode(form, solo) {
+  return {
+    ...form,
+    visibility: solo ? 'private' : form.visibility || 'public',
+    settings: { ...form.settings, solo, maxPlayers: solo ? 1 : Math.max(2, form.settings.maxPlayers || 8) },
+  };
+}
+
 export default function NewMatch() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const [form, setForm] = useState(() => {
+    const solo = params.get('mode') === 'solo';
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      return saved ? { ...DEFAULT_SETTINGS, ...saved, name: '' } : DEFAULT_SETTINGS;
+      const base = saved ? { ...DEFAULT_SETTINGS, ...saved, name: '' } : DEFAULT_SETTINGS;
+      return withMode(base, solo);
     } catch {
-      return DEFAULT_SETTINGS;
+      return withMode(DEFAULT_SETTINGS, solo);
     }
   });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    document.title = 'New battle · League of Coders';
-  }, []);
+    document.title = form.settings.solo ? 'Solo test · League of Coders' : 'New battle · League of Coders';
+  }, [form.settings.solo]);
 
+  useEffect(() => {
+    const solo = params.get('mode') === 'solo';
+    setForm((current) => (current.settings.solo === solo ? current : withMode(current, solo)));
+  }, [params]);
+
+  const solo = !!form.settings.solo;
+  const clock = soloClock(form.settings);
   const total = form.settings.easy + form.settings.medium + form.settings.hard;
   const canSubmit = user?.leetcode && total >= 1 && total <= 10 && !submitting;
 
@@ -47,8 +66,28 @@ export default function NewMatch() {
     <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
       <form onSubmit={submit} className="card p-6 sm:p-8">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold text-white">Set up your battle</h1>
-          <p className="mt-1 text-ink-400">Problems are drawn and shuffled on the server when you press start — nobody sees them early.</p>
+          <div className="mb-5 inline-flex rounded-xl border border-ink-700 bg-ink-950/60 p-1">
+            <button
+              type="button"
+              className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${solo ? 'bg-ink-700 text-white' : 'text-ink-400'}`}
+              onClick={() => setForm((f) => withMode(f, true))}
+            >
+              Solo test
+            </button>
+            <button
+              type="button"
+              className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${!solo ? 'bg-ink-700 text-white' : 'text-ink-400'}`}
+              onClick={() => setForm((f) => withMode(f, false))}
+            >
+              Battle
+            </button>
+          </div>
+          <h1 className="font-display text-3xl font-bold text-white">{solo ? 'Set up your test' : 'Set up your battle'}</h1>
+          <p className="mt-1 text-ink-400">
+            {solo
+              ? `Clock is ${clock.minutes || 0} min from this mix. Easy is 10, medium is 20, hard is 35. Problems stay hidden until you start.`
+              : 'Problems are drawn and shuffled when you press start. Nobody sees them early.'}
+          </p>
         </div>
 
         {!user?.leetcode && (
@@ -67,15 +106,26 @@ export default function NewMatch() {
         <div className="mt-8 flex justify-end">
           <button type="submit" disabled={!canSubmit} className="btn-primary px-6 py-3 text-base">
             {submitting ? <Spinner className="h-5 w-5" /> : <Swords className="h-5 w-5" />}
-            Create lobby
+            {solo ? 'Create test' : 'Create lobby'}
           </button>
         </div>
       </form>
 
       <aside className="space-y-4">
         <div className="card p-5">
-          <p className="section-title mb-4">Scoring</p>
-          <ScoringRules compact />
+          <p className="section-title mb-4">{solo ? 'Time limit' : 'Scoring'}</p>
+          {solo ? (
+            <div className="space-y-2 text-sm text-ink-300">
+              <p className="font-display text-3xl font-bold text-white">{clock.minutes || 0} min</p>
+              <p>Easy {form.settings.easy} × 10</p>
+              <p>Medium {form.settings.medium} × 20</p>
+              <p>Hard {form.settings.hard} × 35</p>
+              {clock.capped && <p className="text-medium">Capped at 180 minutes.</p>}
+              <p className="text-ink-500">Solo tests are private and do not change your rating.</p>
+            </div>
+          ) : (
+            <ScoringRules compact />
+          )}
         </div>
         <div className="card p-5 text-sm text-ink-400">
           <p className="mb-2 font-semibold text-white">Fresh problems for everyone</p>

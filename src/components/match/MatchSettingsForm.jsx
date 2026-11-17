@@ -71,7 +71,7 @@ function TopicPicker({ pool, selected, onChange, disabled }) {
         ))}
         {!visible.length && <p className="text-xs text-ink-500">No topics found</p>}
       </div>
-      <p className="mt-2 text-xs text-ink-500">{selected.length ? `${selected.length} selected — problems will match any of them` : 'No topic filter — any topic can appear'}</p>
+      <p className="mt-2 text-xs text-ink-500">{selected.length ? `${selected.length} selected. A problem can match any of them.` : 'No topic filter. Any topic can appear.'}</p>
     </div>
   );
 }
@@ -84,10 +84,10 @@ export default function MatchSettingsForm({ value, onChange, disabled }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+      <div className={`grid gap-4 ${s.solo ? '' : 'sm:grid-cols-[1fr_auto]'}`}>
         <div>
           <label className="label" htmlFor="match-name">
-            Battle name
+            Name
           </label>
           <input
             id="match-name"
@@ -99,20 +99,23 @@ export default function MatchSettingsForm({ value, onChange, disabled }) {
             onChange={(e) => onChange({ ...value, name: e.target.value })}
           />
         </div>
-        <div>
-          <span className="label">Visibility</span>
-          <Segmented
-            disabled={disabled}
-            value={value.visibility}
-            onChange={(visibility) => onChange({ ...value, visibility })}
-            options={[
-              { value: 'public', label: 'Public', icon: Globe },
-              { value: 'private', label: 'Invite only', icon: Lock },
-            ]}
-          />
-        </div>
+        {!s.solo && (
+          <div>
+            <span className="label">Visibility</span>
+            <Segmented
+              disabled={disabled}
+              value={value.visibility}
+              onChange={(visibility) => onChange({ ...value, visibility })}
+              options={[
+                { value: 'public', label: 'Public', icon: Globe },
+                { value: 'private', label: 'Invite only', icon: Lock },
+              ]}
+            />
+          </div>
+        )}
       </div>
 
+      {!s.solo && (
       <div>
         <span className="label">Duration</span>
         <div className="flex flex-wrap gap-2">
@@ -132,6 +135,7 @@ export default function MatchSettingsForm({ value, onChange, disabled }) {
           ))}
         </div>
       </div>
+      )}
 
       <div>
         <span className="label">Problem mix</span>
@@ -166,7 +170,7 @@ export default function MatchSettingsForm({ value, onChange, disabled }) {
         <p className="mt-2 text-xs text-ink-500">
           {s.pool === 'curated'
             ? 'A hand-picked list of the most common interview problems (Blind 75 / Grind style).'
-            : 'Any free problem from LeetCode’s full catalogue — expect surprises.'}
+            : 'Any free problem from the public LeetCode list.'}
         </p>
       </div>
 
@@ -175,13 +179,15 @@ export default function MatchSettingsForm({ value, onChange, disabled }) {
         <TopicPicker pool={s.pool} selected={s.topics} disabled={disabled} onChange={(topics) => setSetting({ topics })} />
       </div>
 
-      <div className="flex items-center justify-between rounded-xl border border-ink-700 bg-ink-950/40 px-3 py-2">
-        <div>
-          <p className="text-sm font-semibold text-ink-200">Max players</p>
-          <p className="text-xs text-ink-500">Including you</p>
+      {!s.solo && (
+        <div className="flex items-center justify-between rounded-xl border border-ink-700 bg-ink-950/40 px-3 py-2">
+          <div>
+            <p className="text-sm font-semibold text-ink-200">Max players</p>
+            <p className="text-xs text-ink-500">Including you</p>
+          </div>
+          <Stepper value={s.maxPlayers} min={2} max={20} disabled={disabled} onChange={(v) => setSetting({ maxPlayers: v })} />
         </div>
-        <Stepper value={s.maxPlayers} min={2} max={20} disabled={disabled} onChange={(v) => setSetting({ maxPlayers: v })} />
-      </div>
+      )}
     </div>
   );
 }

@@ -16,7 +16,7 @@ const PODIUM = [
 ];
 
 function RatingDelta({ p }) {
-  if (p.ratingBefore == null || p.ratingAfter == null) return <span className="text-ink-500">—</span>;
+  if (p.ratingBefore == null || p.ratingAfter == null) return <span className="text-ink-500">n/a</span>;
   const d = p.ratingAfter - p.ratingBefore;
   return (
     <span className={clsx('font-mono text-sm font-semibold', d > 0 ? 'text-easy' : d < 0 ? 'text-hard' : 'text-ink-400')}>
@@ -56,7 +56,7 @@ export default function Results({ match, messages, me, user }) {
       await api.posts.create({
         title: `${match.name}: ${winner?.score ? `${winner.name} won with ${winner.score} pts` : 'battle results'}`,
         body: ranked
-          .map((p, i) => `${i + 1}. ${p.name} — ${p.score} pts (${p.solves.length}/${match.problems.length} solved)`)
+          .map((p, i) => `${i + 1}. ${p.name}: ${p.score} pts (${p.solves.length}/${match.problems.length} solved)`)
           .join('\n'),
         tags: ['battle', ...match.problems.map((p) => p.difficulty.toLowerCase())].slice(0, 5),
         matchCode: match.code,
@@ -208,7 +208,7 @@ export default function Results({ match, messages, me, user }) {
             </div>
             {match.selection?.reusedSolved > 0 && (
               <p className="mt-3 text-xs text-ink-500">
-                {match.selection.reusedSolved} problem(s) had been solved before by someone who asked to skip them — the pool ran out of fresh ones.
+                {match.selection.reusedSolved} problem(s) had been solved before by someone who asked to skip them. The pool ran out of fresh ones.
               </p>
             )}
           </div>

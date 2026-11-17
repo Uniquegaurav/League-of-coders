@@ -198,7 +198,7 @@ export default function Arena({ match, messages, me, user, now }) {
             );
           })}
           <p className="hidden px-1 pt-2 text-[11px] leading-4 text-ink-500 lg:block">
-            Submit on LeetCode — accepted submissions are picked up automatically every ~20s, or hit “Check my submissions”.
+            Submit on LeetCode. Accepted submissions are picked up about every 20s, or hit “Check my submissions”.
           </p>
         </aside>
 
@@ -227,7 +227,7 @@ export default function Arena({ match, messages, me, user, now }) {
                     mySolve(problem.slug) && (
                       <div className="mb-4 flex items-center gap-2 rounded-xl border border-easy/30 bg-easy/10 px-4 py-2.5 text-sm text-easy">
                         <CheckCircle2 className="h-4 w-4" /> Solved for +{mySolve(problem.slug).points} points
-                        {mySolve(problem.slug).firstSolve && ' — first solve!'}
+                        {mySolve(problem.slug).firstSolve && ' · first solve'}
                       </div>
                     )
                   }

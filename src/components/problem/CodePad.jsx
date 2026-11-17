@@ -60,7 +60,7 @@ export default function CodePad({ slug, snippets = [], storageScope = 'practice'
             setLang(e.target.value);
             localStorage.setItem(LANG_KEY, e.target.value);
           }}
-          className="rounded-lg border border-ink-700 bg-ink-950 px-2 py-1 text-xs text-ink-200 focus:outline-none"
+          className="input w-auto py-1.5 pl-3 text-xs"
         >
           {options.map((o) => (
             <option key={o.langSlug} value={o.langSlug}>

@@ -42,7 +42,7 @@ function LeetCodeSettings() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            run('link', () => api.users.linkLeetCode(username.trim()), 'LeetCode linked — you can compete now!');
+            run('link', () => api.users.linkLeetCode(username.trim()), 'LeetCode linked. You can compete now.');
           }}
           className="space-y-3"
         >
