@@ -27,7 +27,7 @@ export default function AuthPage() {
     signedInHere.current = true;
     toast.success(`Welcome${mode === 'register' ? '' : ' back'}, ${me.name.split(' ')[0]}!`);
     // New players need a LeetCode link before they can battle.
-    navigate(me.leetcode ? from : '/u/me', { replace: true, state: me.leetcode ? undefined : { from } });
+    navigate(me.leetcode?.verified ? from : '/u/me', { replace: true, state: me.leetcode?.verified ? undefined : { from } });
   };
 
   const submit = async (e) => {

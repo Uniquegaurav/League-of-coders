@@ -43,6 +43,7 @@ export const api = {
     linkLeetCode: (username) => http.put('/users/me/leetcode', { username }),
     verifyLeetCode: () => http.post('/users/me/leetcode/verify'),
     unlinkLeetCode: () => http.delete('/users/me/leetcode'),
+    cancelLeetCodeClaim: () => http.delete('/users/me/leetcode/claim'),
     solved: () => http.get('/users/me/solved'),
     setSolved: (slug, solved) => http.put(`/users/me/solved/${slug}`, { solved }),
     leaderboard: (limit = 50) => http.get('/users/leaderboard', { params: { limit } }),
