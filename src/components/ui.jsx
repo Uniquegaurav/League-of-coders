@@ -1,5 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { Loader2, ShieldCheck } from 'lucide-react';
+import { Info, Loader2, ShieldCheck } from 'lucide-react';
 
 export function Spinner({ className }) {
   return <Loader2 className={clsx('animate-spin', className || 'h-5 w-5')} />;
@@ -128,5 +129,68 @@ export function ProgressBar({ value = 0, max = 1, className, barClassName = 'bg-
     <div className={clsx('h-1.5 overflow-hidden rounded-full bg-ink-800', className)}>
       <div className={clsx('h-full rounded-full transition-[width] duration-500', barClassName)} style={{ width: `${pct}%` }} />
     </div>
+  );
+}
+
+// Small "i" button that reveals the specifics, so page copy can stay short.
+export function InfoTip({ children, label = 'More info', className, align = 'left' }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = (e) => !ref.current?.contains(e.target) && setOpen(false);
+    const esc = (e) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [open]);
+  return (
+    <span ref={ref} className={clsx('relative inline-flex align-middle', className)}>
+      <button
+        type="button"
+        aria-label={label}
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex h-5 w-5 items-center justify-center rounded-full text-ink-400 transition hover:text-white focus-visible:text-white"
+      >
+        <Info className="h-4 w-4" />
+      </button>
+      {open && (
+        <span
+          role="tooltip"
+          className={clsx(
+            'absolute top-7 z-30 w-72 max-w-[80vw] rounded-xl border border-ink-700 bg-ink-900 p-3.5 text-left text-sm font-normal normal-case leading-relaxed tracking-normal text-ink-300 shadow-xl',
+            align === 'right' ? 'right-0' : 'left-0'
+          )}
+        >
+          {children}
+        </span>
+      )}
+    </span>
+  );
+}
+
+// Page header on top of a background image. The image sits behind a dark gradient so text stays readable.
+export function PageBanner({ image, title, children, info, actions, position = 'center', flip = false, className }) {
+  return (
+    <section className={clsx('relative rounded-2xl border border-ink-700 bg-ink-900', className)}>
+      <div aria-hidden className="absolute inset-0 overflow-hidden rounded-[inherit]">
+        <img src={image} alt="" className={clsx('h-full w-full object-cover', flip && '-scale-x-100')} style={{ objectPosition: position }} />
+        <div className="absolute inset-0 bg-gradient-to-r from-ink-950/90 via-ink-950/60 to-ink-950/10" />
+      </div>
+      <div className="relative flex flex-wrap items-end justify-between gap-4 px-6 py-8 sm:px-8 sm:py-10">
+        <div className="min-w-0">
+          <h1 className="flex items-center gap-2 font-display text-3xl font-bold text-white">
+            {title}
+            {info && <InfoTip label={`About ${typeof title === 'string' ? title : 'this page'}`}>{info}</InfoTip>}
+          </h1>
+          {children && <p className="mt-1.5 max-w-xl text-ink-300">{children}</p>}
+        </div>
+        {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      </div>
+    </section>
   );
 }

@@ -7,13 +7,14 @@ import { tierFor } from '../lib/rank';
 import { streakOf } from '../lib/progression';
 import { timeAgo } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
-import heroCoder from '../assets/hero-coder.png';
+import arena from '../assets/bg/arena.jpg';
+import redFlare from '../assets/bg/red-flare.jpg';
 import usePolling from '../hooks/usePolling';
 import MatchCard from '../components/match/MatchCard';
 import JoinByCode from '../components/match/JoinByCode';
 import ScoringRules from '../components/match/ScoringRules';
 import { FriendsPanel } from '../components/social/FriendBits';
-import { Avatar, DifficultyBadge, EmptyState, Spinner, VerifiedBadge } from '../components/ui';
+import { Avatar, DifficultyBadge, EmptyState, InfoTip, Spinner, VerifiedBadge } from '../components/ui';
 
 function LinkLeetCodeBanner({ linked }) {
   return (
@@ -201,8 +202,11 @@ export default function CompeteHome() {
 
   return (
     <div className="space-y-10">
-      <section className="grid grid-cols-1 items-center overflow-hidden rounded-3xl border border-ink-700 bg-ink-900 lg:grid-cols-[minmax(0,1.35fr)_minmax(260px,0.65fr)]">
-        <div className="px-6 py-10 sm:px-10 sm:py-14">
+      <section className="relative overflow-hidden rounded-3xl border border-ink-700 bg-ink-900">
+        <img src={arena} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/75 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink-950/80 to-transparent" />
+        <div className="relative px-6 py-12 sm:px-10 sm:py-20">
           <h1 className="max-w-xl font-display text-4xl font-bold leading-tight text-white sm:text-5xl">Code. Compete.</h1>
           <p className="mt-4 max-w-xl text-lg text-ink-300">
             Open a lobby, send the invite link, and race the same LeetCode problems. Scores come from accepted submissions.
@@ -223,7 +227,6 @@ export default function CompeteHome() {
             </div>
           </div>
         </div>
-        <img src={heroCoder} alt="" className="hero-art mx-auto h-auto w-full min-w-0 max-w-full object-contain px-6 pb-6 lg:px-4 lg:py-6 lg:pr-8" />
       </section>
 
       {user && !user.leetcode?.verified && <LinkLeetCodeBanner linked={!!user.leetcode} />}
@@ -241,21 +244,30 @@ export default function CompeteHome() {
             </section>
           )}
 
-          <section className="card flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center">
+          <section className="relative rounded-2xl border border-ink-700 bg-ink-900">
+            <div aria-hidden className="absolute inset-0 overflow-hidden rounded-[inherit]">
+              <img src={redFlare} alt="" className="h-full w-full object-cover object-center" />
+              <div className="absolute inset-0 bg-gradient-to-r from-ink-950/95 via-ink-950/80 to-ink-950/40" />
+            </div>
+            <div className="relative flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
             <div className="flex gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-medium/10 text-medium">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-hard/15 text-hard">
                 <Clock className="h-5 w-5" />
               </span>
               <div>
-                <h2 className="font-semibold text-white">Solo timed test</h2>
-                <p className="mt-1 max-w-xl text-sm text-ink-400">
-                  Pick how many easy, medium, and hard problems you want. The clock is set from that mix: 10, 20, and 35 minutes. It is private and does not change your rating.
-                </p>
+                <h2 className="flex items-center gap-2 font-semibold text-white">
+                  Solo timed test
+                  <InfoTip label="About solo tests">
+                    Choose how many easy, medium and hard problems you want. Each adds time to the clock: 10 minutes for easy, 20 for medium and 35 for hard. Solo tests are private and never change your rating.
+                  </InfoTip>
+                </h2>
+                <p className="mt-1 max-w-xl text-sm text-ink-300">Test yourself against the clock, at your own pace.</p>
               </div>
             </div>
             <Link {...authed(user, '/new?mode=solo')} className="btn-secondary shrink-0">
               Start a solo test <ArrowRight className="h-4 w-4" />
             </Link>
+            </div>
           </section>
 
           <section className="overflow-hidden rounded-2xl border border-ink-700">
