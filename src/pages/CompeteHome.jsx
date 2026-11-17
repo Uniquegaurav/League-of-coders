@@ -7,8 +7,7 @@ import { tierFor } from '../lib/rank';
 import { streakOf } from '../lib/progression';
 import { timeAgo } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
-import arena from '../assets/bg/arena.jpg';
-import redFlare from '../assets/bg/red-flare.jpg';
+import heroCoder from '../assets/hero-coder.png';
 import usePolling from '../hooks/usePolling';
 import MatchCard from '../components/match/MatchCard';
 import JoinByCode from '../components/match/JoinByCode';
@@ -202,13 +201,14 @@ export default function CompeteHome() {
 
   return (
     <div className="space-y-10">
-      <section className="relative overflow-hidden rounded-3xl border border-ink-700 bg-ink-900">
-        <img src={arena} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover object-center" />
-        <div className="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/75 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink-950/80 to-transparent" />
-        <div className="relative px-6 py-12 sm:px-10 sm:py-20">
-          <h1 className="max-w-xl font-display text-4xl font-bold leading-tight text-white sm:text-5xl">Code. Compete.</h1>
-          <p className="mt-4 max-w-xl text-lg text-ink-300">
+      <section className="flex items-center pt-6 sm:pt-16 lg:min-h-[540px]">
+        <div>
+          <h1 className="max-w-xl font-display text-5xl font-bold leading-[1.05] tracking-tight text-white drop-shadow-lg sm:text-7xl">
+            Code.
+            <br />
+            <span className="bg-gradient-to-r from-neon-400 via-brand-400 to-fuchsia-400 bg-clip-text text-transparent">Compete.</span>
+          </h1>
+          <p className="mt-5 max-w-lg text-lg text-ink-200">
             Open a lobby, send the invite link, and race the same LeetCode problems. Scores come from accepted submissions.
           </p>
           {user && (
@@ -218,7 +218,7 @@ export default function CompeteHome() {
               <span className="text-ink-500"> · {user.stats.wins} wins in {user.stats.matches} rated battles</span>
             </p>
           )}
-          <div className="mt-8 flex max-w-xl flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="mt-8 flex max-w-2xl flex-col gap-3 sm:flex-row sm:items-center">
             <Link {...authed(user, '/new?mode=battle')} className="btn-primary px-6 py-3 text-base">
               <Swords className="h-5 w-5" /> Start a battle
             </Link>
@@ -244,12 +244,8 @@ export default function CompeteHome() {
             </section>
           )}
 
-          <section className="relative rounded-2xl border border-ink-700 bg-ink-900">
-            <div aria-hidden className="absolute inset-0 overflow-hidden rounded-[inherit]">
-              <img src={redFlare} alt="" className="h-full w-full object-cover object-center" />
-              <div className="absolute inset-0 bg-gradient-to-r from-ink-950/95 via-ink-950/80 to-ink-950/40" />
-            </div>
-            <div className="relative flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
+          <section className="card">
+            <div className="flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
             <div className="flex gap-4">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-hard/15 text-hard">
                 <Clock className="h-5 w-5" />
@@ -338,19 +334,22 @@ export default function CompeteHome() {
 
           <section>
             <h2 className="section-title mb-4">How it works</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {STEPS.map(({ icon: Icon, title, body }, i) => (
-                <div key={title} className="card p-5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <span className="font-mono text-xs text-ink-500">0{i + 1}</span>
+            <div className="grid items-center gap-6 md:grid-cols-[minmax(0,1fr)_220px]">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {STEPS.map(({ icon: Icon, title, body }, i) => (
+                  <div key={title} className="card p-5">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span className="font-mono text-xs text-ink-500">0{i + 1}</span>
+                    </div>
+                    <p className="mt-4 font-semibold text-white">{title}</p>
+                    <p className="mt-1 text-sm text-ink-400">{body}</p>
                   </div>
-                  <p className="mt-4 font-semibold text-white">{title}</p>
-                  <p className="mt-1 text-sm text-ink-400">{body}</p>
-                </div>
-              ))}
+                ))}
+              </div>
+              <img src={heroCoder} alt="" className="hero-art mx-auto hidden w-full max-w-[220px] md:block" />
             </div>
           </section>
 

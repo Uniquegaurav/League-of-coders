@@ -145,7 +145,7 @@ export default function Navbar() {
     clsx('rounded-lg px-3 py-2 text-sm font-medium transition', isActive ? 'bg-ink-800 text-white' : 'text-ink-300 hover:text-white');
 
   return (
-    <header className="sticky top-0 z-40 border-b border-ink-800/80 bg-ink-950/75 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-white/5 bg-ink-950/50 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         <Logo />
         <nav className="hidden items-center gap-1 md:flex">
