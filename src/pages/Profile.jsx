@@ -8,6 +8,7 @@ import { tierFor } from '../lib/rank';
 import { timeAgo, ordinal } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
 import { Avatar, EmptyState, PageLoader, ProgressBar, Spinner, VerifiedBadge } from '../components/ui';
+import portal from '../assets/bg/portal.jpg';
 import { ProblemMix } from '../components/match/MatchCard';
 import { FriendButton } from '../components/social/FriendBits';
 import { milestonesFor, streakOf } from '../lib/progression';
@@ -349,7 +350,10 @@ export default function Profile() {
     <div className="space-y-6">
       <div className={clsx('grid grid-cols-1 items-start gap-6', isMe && 'lg:grid-cols-[minmax(0,1fr)_380px]')}>
         <section className="card overflow-hidden">
-          <div className="h-24 bg-gradient-to-r from-brand-600/30 via-ink-850 to-neon-500/15" />
+          <div className="relative h-32 sm:h-36">
+            <img src={portal} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover object-[center_40%]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/30 to-transparent" />
+          </div>
           <div className="px-6 pb-6">
             <div className="-mt-10 flex flex-wrap items-end justify-between gap-4">
               <span className="rounded-full ring-4 ring-ink-900">

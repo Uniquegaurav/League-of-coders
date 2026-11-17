@@ -33,9 +33,6 @@
   .btn-primary {
     @apply btn bg-brand-500 text-white hover:bg-brand-600;
   }
-  .hero-art {
-    animation: hero-float 7s ease-in-out infinite;
-  }
   .room-card {
     @apply transition duration-200;
   }
@@ -78,16 +75,6 @@
   }
   .gradient-text {
     @apply bg-gradient-to-r from-brand-400 via-fuchsia-300 to-neon-400 bg-clip-text text-transparent;
-  }
-}
-
-@keyframes hero-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
   }
 }
 
