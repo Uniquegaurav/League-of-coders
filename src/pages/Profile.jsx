@@ -85,20 +85,105 @@ function DisplayName() {
   );
 }
 
+function CopyCode({ code }) {
+  return (
+    <div className="flex items-center gap-2">
+      <code className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-1.5 font-mono text-sm text-neon-400">{code}</code>
+      <button
+        type="button"
+        className="btn-ghost btn-sm"
+        onClick={() => navigator.clipboard.writeText(code).then(() => toast.success('Code copied'))}
+      >
+        <Copy className="h-3.5 w-3.5" /> Copy
+      </button>
+    </div>
+  );
+}
+
+// Ownership steps shared by a new claim and an older unverified link.
+function VerifySteps({ username, code, busy, onVerify, onCancel, cancelLabel }) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <p className="label mb-0.5">LeetCode account</p>
+        <p className="text-sm text-ink-300">
+          Confirm that <span className="font-mono text-white">@{username}</span> is yours. Only you can edit its profile summary, so that is how we check.
+        </p>
+      </div>
+      <ol className="space-y-3 rounded-xl border border-ink-700 bg-ink-950/50 p-4 text-sm text-ink-300">
+        <li>
+          <p className="mb-2">
+            <span className="mr-2 font-mono text-ink-500">1</span>Copy this code
+          </p>
+          <CopyCode code={code} />
+        </li>
+        <li>
+          <span className="mr-2 font-mono text-ink-500">2</span>Paste it into your{' '}
+          <a href="https://leetcode.com/profile/" target="_blank" rel="noreferrer" className="text-brand-400 hover:underline">
+            LeetCode profile summary
+          </a>{' '}
+          and save
+        </li>
+        <li>
+          <span className="mr-2 font-mono text-ink-500">3</span>Come back and press Verify. You can remove the code afterwards.
+        </li>
+      </ol>
+      <div className="flex gap-2">
+        <button className="btn-primary btn-sm" disabled={!!busy} onClick={onVerify}>
+          {busy === 'verify' ? <Spinner className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />} Verify
+        </button>
+        <button className="btn-ghost btn-sm" disabled={!!busy} onClick={onCancel}>
+          {cancelLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function LeetCodeAccount() {
   const { user } = useAuth();
   const location = useLocation();
   const [username, setUsername] = useState('');
   const [busy, run] = useSave();
   const lc = user.leetcode;
+  const claim = user.leetcodeClaim;
   const returnTo = location.state?.from;
+  const verify = () => run('verify', api.users.verifyLeetCode, 'LeetCode account verified and linked');
+
+  // Mid-claim: show the steps.
+  if (claim) {
+    return (
+      <VerifySteps
+        username={claim.username}
+        code={claim.token}
+        busy={busy}
+        onVerify={verify}
+        onCancel={() => run('cancel', api.users.cancelLeetCodeClaim)}
+        cancelLabel={lc ? 'Keep current account' : 'Use a different username'}
+      />
+    );
+  }
+
+  // Linked before verification was required.
+  if (lc && !lc.verified && user.leetcodeVerifyToken) {
+    return (
+      <VerifySteps
+        username={lc.username}
+        code={user.leetcodeVerifyToken}
+        busy={busy}
+        onVerify={verify}
+        onCancel={() => window.confirm('Unlink this LeetCode account?') && run('unlink', api.users.unlinkLeetCode, 'Unlinked')}
+        cancelLabel="Unlink"
+      />
+    );
+  }
 
   if (!lc) {
     return (
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          run('link', () => api.users.linkLeetCode(username.trim()), 'LeetCode linked. You can compete now.');
+          run('link', () => api.users.linkLeetCode(username.trim()));
         }}
       >
         <label className="label" htmlFor="lc-username">
@@ -107,11 +192,11 @@ function LeetCodeAccount() {
         <div className="flex gap-2">
           <input id="lc-username" className="input py-2" placeholder="your-leetcode-username" value={username} onChange={(e) => setUsername(e.target.value)} />
           <button className="btn-primary btn-sm shrink-0" disabled={!username.trim() || !!busy}>
-            {busy === 'link' && <Spinner className="h-3.5 w-3.5" />} Link
+            {busy === 'link' && <Spinner className="h-3.5 w-3.5" />} Continue
           </button>
         </div>
         <p className="mt-1.5 text-xs text-ink-500">
-          Required to compete. Use the name from leetcode.com/u/<span className="text-ink-300">username</span>.
+          Required to compete. Use the name from leetcode.com/u/<span className="text-ink-300">username</span>. Next you will confirm it is yours.
         </p>
       </form>
     );
@@ -127,13 +212,9 @@ function LeetCodeAccount() {
           </a>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {lc.verified ? (
-            <span className="chip border-neon-500/40 text-neon-400">
-              <ShieldCheck className="h-3.5 w-3.5" /> Verified
-            </span>
-          ) : (
-            <span className="chip border-medium/40 text-medium">Unverified</span>
-          )}
+          <span className="chip border-neon-500/40 text-neon-400">
+            <ShieldCheck className="h-3.5 w-3.5" /> Verified
+          </span>
           <button
             className="btn-ghost btn-sm text-ink-400"
             disabled={!!busy}
@@ -143,32 +224,6 @@ function LeetCodeAccount() {
           </button>
         </div>
       </div>
-
-      {!lc.verified && user.leetcodeVerifyToken && (
-        <div className="rounded-xl border border-ink-700 bg-ink-950/50 p-3 text-xs text-ink-400">
-          <p>
-            To verify ownership, add this code to your{' '}
-            <a href="https://leetcode.com/profile/" target="_blank" rel="noreferrer" className="text-brand-400 hover:underline">
-              LeetCode profile summary
-            </a>
-            , save it, then press Verify.
-          </p>
-          <div className="mt-2 flex items-center gap-2">
-            <code className="rounded-lg border border-ink-700 bg-ink-900 px-2.5 py-1 font-mono text-neon-400">{user.leetcodeVerifyToken}</code>
-            <button
-              className="btn-ghost btn-sm px-2"
-              aria-label="Copy code"
-              onClick={() => navigator.clipboard.writeText(user.leetcodeVerifyToken).then(() => toast.success('Copied'))}
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </button>
-            <button className="btn-secondary btn-sm ml-auto" disabled={!!busy} onClick={() => run('verify', api.users.verifyLeetCode, 'Ownership verified')}>
-              {busy === 'verify' ? <Spinner className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />} Verify
-            </button>
-          </div>
-        </div>
-      )}
-
       {returnTo && (
         <Link to={returnTo} className="btn-primary btn-sm">
           Back to the battle <ArrowRight className="h-4 w-4" />
@@ -273,7 +328,7 @@ export default function Profile() {
       .get(targetId)
       .then(setData)
       .catch(setError);
-  }, [targetId, user?.stats?.rating, user?.leetcode?.verified, user?.name]);
+  }, [targetId, user?.stats?.rating, user?.leetcode?.verified, user?.leetcode?.username, user?.name]);
 
   useEffect(() => {
     if (data) document.title = `${data.player.name} · League of Coders`;

@@ -47,7 +47,7 @@ export default function NewMatch() {
   const solo = !!form.settings.solo;
   const clock = soloClock(form.settings);
   const total = form.settings.easy + form.settings.medium + form.settings.hard;
-  const canSubmit = user?.leetcode && total >= 1 && total <= 10 && !submitting;
+  const canSubmit = user?.leetcode?.verified && total >= 1 && total <= 10 && !submitting;
 
   const submit = async (e) => {
     e.preventDefault();
@@ -97,13 +97,13 @@ export default function NewMatch() {
           </p>
         </div>
 
-        {!user?.leetcode && (
+        {!user?.leetcode?.verified && (
           <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-medium/30 bg-medium/5 p-4">
             <p className="flex items-center gap-2 text-sm text-ink-200">
-              <Link2 className="h-4 w-4 text-medium" /> Link your LeetCode username before hosting.
+              <Link2 className="h-4 w-4 text-medium" /> {user?.leetcode ? 'Verify your LeetCode account before hosting.' : 'Link your LeetCode account before hosting.'}
             </p>
             <Link to="/u/me" className="btn-secondary btn-sm">
-              Link now <ArrowRight className="h-3.5 w-3.5" />
+              {user?.leetcode ? 'Verify now' : 'Link now'} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         )}

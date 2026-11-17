@@ -15,18 +15,22 @@ import ScoringRules from '../components/match/ScoringRules';
 import { FriendsPanel } from '../components/social/FriendBits';
 import { Avatar, DifficultyBadge, EmptyState, Spinner, VerifiedBadge } from '../components/ui';
 
-function LinkLeetCodeBanner() {
+function LinkLeetCodeBanner({ linked }) {
   return (
     <div className="card flex flex-col items-start justify-between gap-4 border-medium/30 bg-medium/5 p-5 sm:flex-row sm:items-center">
       <div className="flex gap-3">
         <Link2 className="mt-0.5 h-5 w-5 shrink-0 text-medium" />
         <div>
-          <p className="font-semibold text-white">Link your LeetCode account to start competing</p>
-          <p className="text-sm text-ink-400">We read your accepted submissions and score the match from those. Nothing to paste in.</p>
+          <p className="font-semibold text-white">{linked ? 'Verify your LeetCode account to keep competing' : 'Link your LeetCode account to start competing'}</p>
+          <p className="text-sm text-ink-400">
+            {linked
+              ? 'Battles now require a verified account, so nobody can compete as someone else. It takes about a minute.'
+              : 'We read your accepted submissions and score the match from those. You confirm the account is yours once.'}
+          </p>
         </div>
       </div>
       <Link to="/u/me" className="btn-secondary shrink-0">
-        Link LeetCode <ArrowRight className="h-4 w-4" />
+        {linked ? 'Verify' : 'Link LeetCode'} <ArrowRight className="h-4 w-4" />
       </Link>
     </div>
   );
@@ -222,7 +226,7 @@ export default function CompeteHome() {
         <img src={heroCoder} alt="" className="hero-art mx-auto h-auto w-full min-w-0 max-w-full object-contain px-6 pb-6 lg:px-4 lg:py-6 lg:pr-8" />
       </section>
 
-      {user && !user.leetcode && <LinkLeetCodeBanner />}
+      {user && !user.leetcode?.verified && <LinkLeetCodeBanner linked={!!user.leetcode} />}
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-10">

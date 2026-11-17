@@ -92,13 +92,13 @@ export default function Lobby({ match, messages, me, user, setMatch }) {
                 <LogOut className="h-4 w-4" /> Leave
               </button>
             ) : user ? (
-              user.leetcode ? (
+              user.leetcode?.verified ? (
                 <button className="btn-primary" disabled={!!busy} onClick={() => run('join', () => api.matches.join(match.code), 'You joined the battle!')}>
                   {busy === 'join' ? <Spinner className="h-4 w-4" /> : <Users className="h-4 w-4" />} Join battle
                 </button>
               ) : (
                 <Link to="/u/me" state={{ from: location.pathname }} className="btn-primary">
-                  <Link2 className="h-4 w-4" /> Link LeetCode to join
+                  <Link2 className="h-4 w-4" /> {user.leetcode ? 'Verify LeetCode to join' : 'Link LeetCode to join'}
                 </Link>
               )
             ) : (
