@@ -54,6 +54,13 @@ export default function NewMatch() {
     setSubmitting(true);
     try {
       const { match } = await api.matches.create(form);
+      const inviteId = params.get('invite');
+      if (inviteId && !form.settings.solo) {
+        api.friends
+          .invite(inviteId, match.code)
+          .then(() => toast.success('Challenge sent to your friend'))
+          .catch((err) => toast.error(err.message));
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ visibility: form.visibility, settings: form.settings }));
       navigate(`/m/${match.code}`);
     } catch (err) {

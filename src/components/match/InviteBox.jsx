@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Check, Copy, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { inviteUrl } from '../../lib/format';
+import { InviteFriends } from '../social/FriendBits';
 
 async function copy(text) {
   try {
@@ -63,6 +64,7 @@ export default function InviteBox({ code, name }) {
         )}
       </div>
       <p className="mt-2 text-xs text-ink-500">Anyone with the link can join until the match starts, and spectate after.</p>
+      <InviteFriends code={code} />
     </div>
   );
 }

@@ -10,6 +10,9 @@
     background: #0c0e13;
     min-height: 100vh;
   }
+  #root {
+    isolation: isolate;
+  }
   ::selection {
     background: rgba(124, 92, 255, 0.4);
   }
@@ -81,6 +84,219 @@
   }
 }
 
+/* ---------- Game layer: arena backdrop, HUD panels, shine and glow ---------- */
+@layer components {
+  .hud-panel {
+    @apply relative overflow-hidden rounded-2xl border border-ink-700/70 bg-ink-900/70 backdrop-blur-sm;
+    background-image: linear-gradient(180deg, rgba(124, 92, 255, 0.06), transparent 40%);
+  }
+  .hud-panel::before {
+    /* corner bracket, like a game HUD frame */
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background:
+      linear-gradient(90deg, rgba(161, 139, 255, 0.7), transparent) top left / 28px 1px no-repeat,
+      linear-gradient(180deg, rgba(161, 139, 255, 0.7), transparent) top left / 1px 28px no-repeat,
+      linear-gradient(270deg, rgba(94, 234, 212, 0.55), transparent) bottom right / 28px 1px no-repeat,
+      linear-gradient(0deg, rgba(94, 234, 212, 0.55), transparent) bottom right / 1px 28px no-repeat;
+  }
+  .hud-title {
+    @apply flex items-center gap-2 font-display text-xs font-bold uppercase tracking-[0.18em] text-ink-300;
+  }
+  .shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transform: translateX(-120%) skewX(-18deg);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.09), transparent);
+    transition: transform 0.7s ease;
+  }
+  .shine:hover::after {
+    transform: translateX(120%) skewX(-18deg);
+  }
+  .lift {
+    @apply transition duration-300;
+  }
+  .lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px -18px rgba(124, 92, 255, 0.55);
+  }
+  .neon-ring {
+    position: relative;
+  }
+  .neon-ring::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(from var(--angle, 0deg), #7c5cff, #22d3ee, #fbbf24, #7c5cff);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: neon-spin 6s linear infinite;
+    pointer-events: none;
+  }
+  .btn-play {
+    @apply btn relative overflow-hidden bg-gradient-to-r from-brand-500 via-fuchsia-500 to-brand-500 text-white shadow-glow;
+    background-size: 200% 100%;
+    animation: gradient-pan 4s ease infinite;
+  }
+  .btn-play:hover {
+    filter: brightness(1.12);
+  }
+  .stat-num {
+    @apply font-display font-black tabular-nums text-white;
+  }
+  .xp-track {
+    @apply relative h-2 overflow-hidden rounded-full bg-ink-800;
+  }
+  .xp-fill {
+    transform-origin: left;
+    @apply h-full rounded-full bg-gradient-to-r from-brand-500 via-fuchsia-400 to-neon-400 transition-[width] duration-700 ease-out;
+    box-shadow: 0 0 12px rgba(161, 139, 255, 0.7);
+  }
+}
+
+.ring-draw {
+  animation: ring-draw 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes ring-draw {
+  from {
+    stroke-dashoffset: var(--ring-c);
+  }
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes neon-spin {
+  to {
+    --angle: 360deg;
+  }
+}
+@keyframes gradient-pan {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Arena backdrop: perspective grid floor + drifting glow orbs */
+.arena-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: radial-gradient(ellipse at top, #12142a 0%, #0c0e13 55%);
+}
+.arena-bg .grid-floor {
+  position: absolute;
+  left: -50%;
+  right: -50%;
+  bottom: -10%;
+  height: 60%;
+  background-image:
+    linear-gradient(rgba(124, 92, 255, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 92, 255, 0.16) 1px, transparent 1px);
+  background-size: 64px 64px;
+  transform: perspective(600px) rotateX(62deg);
+  transform-origin: bottom;
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent 85%);
+  animation: grid-scroll 6s linear infinite;
+}
+.arena-bg .orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.35;
+  animation: orb-drift 22s ease-in-out infinite;
+}
+.arena-bg .spark {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: #a18bff;
+  box-shadow: 0 0 8px #a18bff;
+  animation: spark-rise linear infinite;
+}
+@keyframes grid-scroll {
+  to {
+    background-position: 0 64px;
+  }
+}
+@keyframes orb-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(60px, 40px) scale(1.1);
+  }
+  66% {
+    transform: translate(-40px, 20px) scale(0.95);
+  }
+}
+@keyframes spark-rise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-80vh);
+    opacity: 0;
+  }
+}
+
+/* Confetti pieces for wins / level ups */
+.confetti-piece {
+  position: fixed;
+  top: -12px;
+  width: 8px;
+  height: 14px;
+  z-index: 100;
+  pointer-events: none;
+  animation: confetti-fall linear forwards;
+}
+@keyframes confetti-fall {
+  to {
+    transform: translate3d(var(--dx, 0), 105vh, 0) rotate(var(--rot, 540deg));
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .arena-bg .spark,
+  .confetti-piece {
+    display: none;
+  }
+}
+
 @keyframes hero-float {
   0%,
   100% {
@@ -125,4 +341,10 @@
 .problem-html .example-block,
 .problem-html .example {
   @apply my-3;
+}
+
+/* Let Tailwind transform utilities spin/float SVG parts around their own centre. */
+svg [class*='animate-'] {
+  transform-box: fill-box;
+  transform-origin: center;
 }

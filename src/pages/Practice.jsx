@@ -1,14 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { CheckCircle2, ChevronLeft, ChevronRight, Circle, Search, Swords } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, ChevronRight, Circle, Flame, Gift, Map as MapIcon, Search, Sparkles, Swords, Target, Trophy } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { practiceOf, titleFor, XP } from '../lib/progression';
+import { burstConfetti, CountUp, floatXpAt, LevelUpOverlay, ProgressRing, XpBar } from '../components/game/fx';
+import { PracticeArt } from '../components/game/ModeArt';
 import { DifficultyBadge, EmptyState, Spinner } from '../components/ui';
 
 const LIMIT = 30;
 const SOLVED_LIMIT = 20;
+const DIFF_COLORS = { Easy: '#34d399', Medium: '#fbbf24', Hard: '#fb7185' };
+
+// Mastery ranks for a topic, by share of the curated set solved.
+const MASTERY = [
+  { min: 0.8, name: 'Master', color: 'text-fuchsia-300', bar: 'from-fuchsia-500 to-brand-400' },
+  { min: 0.5, name: 'Expert', color: 'text-sky-300', bar: 'from-sky-500 to-neon-400' },
+  { min: 0.2, name: 'Adept', color: 'text-easy', bar: 'from-emerald-500 to-teal-300' },
+  { min: 0.01, name: 'Novice', color: 'text-medium', bar: 'from-amber-500 to-yellow-300' },
+  { min: 0, name: 'Locked', color: 'text-ink-500', bar: 'from-ink-600 to-ink-500' },
+];
+const masteryOf = (solved, total) => MASTERY.find((m) => (total ? solved / total : 0) >= m.min);
 
 function Pager({ page, pages, onPage }) {
   if (pages <= 1) return null;
@@ -27,32 +41,203 @@ function Pager({ page, pages, onPage }) {
   );
 }
 
-function ProblemRow({ problem, done, canTrack, onToggle }) {
+function ProblemRow({ problem, done, canTrack, onToggle, isDaily, index }) {
+  const [busy, setBusy] = useState(false);
+  const reward = (XP[problem.difficulty] || 10) * (isDaily ? 2 : 1);
+
+  const click = async (e) => {
+    const el = e.currentTarget;
+    setBusy(true);
+    const gained = await onToggle(problem.slug);
+    setBusy(false);
+    floatXpAt(el, gained);
+  };
+
   return (
-    <li className="flex items-center gap-4 px-4 py-3 hover:bg-ink-850/60">
-      <button
-        disabled={!canTrack}
-        onClick={() => onToggle(problem.slug)}
-        title={canTrack ? (done ? 'Move back to the problem bank' : 'Mark as solved') : 'Sign in to track progress'}
-        className={clsx('shrink-0 rounded-full p-1', done ? 'text-easy' : 'text-ink-600 hover:text-ink-400')}
-      >
-        {done ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
-      </button>
+    <li
+      className={clsx('group flex animate-rise-in items-center gap-4 px-4 py-3 transition hover:bg-ink-850/60', isDaily && 'bg-fuchsia-500/5')}
+      style={{ animationDelay: `${Math.min(index, 12) * 25}ms` }}
+    >
+      <span className="shrink-0">
+        <button
+          disabled={!canTrack || busy}
+          onClick={click}
+          title={canTrack ? (done ? 'Move back to the problem bank' : `Mark as solved (+${reward} XP)`) : 'Sign in to track progress'}
+          className={clsx('rounded-full p-1 transition', done ? 'text-easy' : 'text-ink-600 hover:scale-110 hover:text-easy')}
+        >
+          {busy ? <Spinner className="h-5 w-5" /> : done ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
+        </button>
+      </span>
       <Link to={`/problems/${problem.slug}`} className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-ink-200 hover:text-white">
-          {problem.frontendId && <span className="text-ink-500">{problem.frontendId}. </span>}
-          {problem.title}
+        <p className="flex items-center gap-2 truncate text-sm font-medium text-ink-200 group-hover:text-white">
+          <span className="truncate">
+            {problem.frontendId && <span className="text-ink-500">{problem.frontendId}. </span>}
+            {problem.title}
+          </span>
+          {isDaily && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-fuchsia-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-fuchsia-300">
+              <Gift className="h-3 w-3" /> Daily
+            </span>
+          )}
         </p>
         <p className="mt-0.5 truncate text-xs text-ink-500">{problem.tags.slice(0, 4).join(' · ')}</p>
       </Link>
-      {problem.acRate != null && <span className="hidden font-mono text-xs text-ink-500 sm:block">{problem.acRate.toFixed(1)}%</span>}
+      {!done && <span className="hidden font-mono text-xs font-bold text-brand-400/80 sm:block">+{reward} XP</span>}
+      {problem.acRate != null && <span className="hidden font-mono text-xs text-ink-500 md:block">{problem.acRate.toFixed(1)}%</span>}
       <DifficultyBadge difficulty={problem.difficulty} className="w-16 justify-center" />
     </li>
   );
 }
 
+function TrainerCard({ user }) {
+  const lvl = practiceOf(user);
+  return (
+    <div className="hud-panel neon-ring relative overflow-hidden p-6">
+      <PracticeArt className="pointer-events-none absolute -bottom-12 left-1/2 h-48 w-48 opacity-10" />
+      <div className="relative flex flex-wrap items-center gap-5">
+        <ProgressRing value={lvl.xp - lvl.levelXp} max={lvl.nextLevelXp - lvl.levelXp} size={92} stroke={7} color="#a18bff">
+          <span className="text-center leading-none">
+            <span className="block text-[9px] font-bold uppercase tracking-widest text-ink-400">Level</span>
+            <span className="stat-num text-3xl">{lvl.level}</span>
+          </span>
+        </ProgressRing>
+        <div className="min-w-[200px] flex-1">
+          <p className="font-display text-xl font-black text-white">{titleFor(lvl.level)}</p>
+          <p className="text-sm text-ink-400">
+            <CountUp value={lvl.xp} className="font-mono text-brand-400" /> XP · {lvl.nextLevelXp - lvl.xp} XP to level {lvl.level + 1}
+          </p>
+          <XpBar pct={lvl.pct} className="mt-3 h-2.5" />
+        </div>
+        <div className="flex gap-3">
+          <div className={clsx('rounded-xl border px-4 py-3 text-center', lvl.streak ? 'border-orange-500/40 bg-orange-500/10' : 'border-ink-700 bg-ink-950/40')}>
+            <Flame className={clsx('mx-auto h-6 w-6', lvl.streak ? 'animate-flicker text-orange-400' : 'text-ink-600')} />
+            <p className="stat-num text-xl">{lvl.streak}</p>
+            <p className="text-[10px] uppercase tracking-wider text-ink-500">Day streak</p>
+          </div>
+          <div className="rounded-xl border border-ink-700 bg-ink-950/40 px-4 py-3 text-center">
+            <Trophy className="mx-auto h-6 w-6 text-medium" />
+            <p className="stat-num text-xl">{lvl.bestStreak}</p>
+            <p className="text-[10px] uppercase tracking-wider text-ink-500">Best</p>
+          </div>
+        </div>
+      </div>
+      <p className="relative mt-4 text-xs text-ink-500">
+        Easy +{XP.Easy} · Medium +{XP.Medium} · Hard +{XP.Hard} XP · Daily quest pays double · Mark one problem a day to keep the flame alive.
+      </p>
+    </div>
+  );
+}
+
+function DailyBanner({ daily, onToggle, solvedNow }) {
+  if (!daily?.problem) return null;
+  const p = daily.problem;
+  const done = daily.done || solvedNow;
+  return (
+    <div className="hud-panel shine flex flex-wrap items-center gap-4 border-fuchsia-500/30 p-5">
+      <span className="flex h-12 w-12 shrink-0 animate-float-slow items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-500 to-brand-600 shadow-glow">
+        <Gift className="h-6 w-6 text-white" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="hud-title text-fuchsia-300">Daily quest · {daily.day}</p>
+        <Link to={`/problems/${p.slug}`} className="mt-1 block truncate font-display text-lg font-bold text-white hover:underline">
+          {p.title}
+        </Link>
+        <div className="mt-1 flex items-center gap-2">
+          <DifficultyBadge difficulty={p.difficulty} />
+          <span className="text-xs text-brand-400">+{(XP[p.difficulty] || 10) * 2} XP</span>
+        </div>
+      </div>
+      {done ? (
+        <span className="chip border-easy/40 py-1.5 text-sm text-easy">
+          <CheckCircle2 className="h-4 w-4" /> Claimed
+        </span>
+      ) : (
+        <div className="flex gap-2">
+          <Link to={`/problems/${p.slug}`} className="btn-secondary">
+            Open
+          </Link>
+          {onToggle && (
+            <button
+              className="btn-play"
+              onClick={async (e) => {
+                const el = e.currentTarget;
+                floatXpAt(el, await onToggle(p.slug));
+              }}
+            >
+              <Sparkles className="h-4 w-4" /> I solved it
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MasteryMap({ progress, activeTopic, onPick }) {
+  if (!progress) return null;
+  const diffs = ['Easy', 'Medium', 'Hard'];
+  return (
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+      <div className="hud-panel p-5">
+        <p className="hud-title mb-4">
+          <Target className="h-4 w-4 text-easy" /> Difficulty clears
+        </p>
+        <div className="flex justify-between">
+          {diffs.map((d) => {
+            const v = progress.byDifficulty?.[d] || { solved: 0, total: 0 };
+            return (
+              <div key={d} className="text-center">
+                <ProgressRing value={v.solved} max={v.total} size={64} stroke={5} color={DIFF_COLORS[d]}>
+                  <span className="font-mono text-xs font-bold text-white">{v.solved}</span>
+                </ProgressRing>
+                <p className="mt-1 text-xs font-semibold" style={{ color: DIFF_COLORS[d] }}>
+                  {d}
+                </p>
+                <p className="font-mono text-[10px] text-ink-500">/{v.total}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="hud-panel p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="hud-title">
+            <MapIcon className="h-4 w-4 text-neon-400" /> Skill map
+          </p>
+          <p className="text-[11px] text-ink-500">Click a skill to train it</p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+          {progress.topics.map((t) => {
+            const m = masteryOf(t.solved, t.total);
+            const pct = t.total ? Math.round((t.solved / t.total) * 100) : 0;
+            return (
+              <button
+                key={t.topic}
+                onClick={() => onPick(activeTopic === t.topic ? '' : t.topic)}
+                className={clsx(
+                  'lift rounded-xl border bg-ink-950/50 p-3 text-left',
+                  activeTopic === t.topic ? 'border-brand-500 shadow-glow' : 'border-ink-800 hover:border-ink-600'
+                )}
+              >
+                <p className="truncate text-sm font-semibold text-ink-200">{t.topic}</p>
+                <p className={clsx('text-[10px] font-bold uppercase tracking-wider', m.color)}>{m.name}</p>
+                <div className="xp-track mt-2 h-1.5">
+                  <div className={clsx('h-full rounded-full bg-gradient-to-r transition-[width] duration-700', m.bar)} style={{ width: `${pct}%` }} />
+                </div>
+                <p className="mt-1 font-mono text-[10px] text-ink-500">
+                  {t.solved}/{t.total}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Practice() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [filters, setFilters] = useState({ pool: 'curated', difficulty: '', topic: '', search: '' });
   const [page, setPage] = useState(1);
   const [solvedPage, setSolvedPage] = useState(1);
@@ -63,6 +248,10 @@ export default function Practice() {
   const [topics, setTopics] = useState([]);
   const [debounced, setDebounced] = useState('');
   const [refresh, setRefresh] = useState(0);
+  const [daily, setDaily] = useState(null);
+  const [progress, setProgress] = useState(null);
+  const [levelUp, setLevelUp] = useState(null);
+  const [dailyClaimed, setDailyClaimed] = useState(false);
 
   useEffect(() => {
     document.title = 'Practice · League of Coders';
@@ -76,6 +265,16 @@ export default function Practice() {
   useEffect(() => {
     api.problems.topics(filters.pool).then((r) => setTopics(r.topics)).catch(() => {});
   }, [filters.pool]);
+
+  useEffect(() => {
+    api.problems.daily().then(setDaily).catch(() => {});
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user) return setProgress(null);
+    api.users.progress().then(setProgress).catch(() => {});
+    return undefined;
+  }, [user?.id, refresh]);
 
   const query = {
     pool: filters.pool,
@@ -95,7 +294,8 @@ export default function Practice() {
     return () => {
       cancelled = true;
     };
-  }, [filters.pool, filters.difficulty, filters.topic, debounced, page, user, refresh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.pool, filters.difficulty, filters.topic, debounced, page, user?.id, refresh]);
 
   useEffect(() => {
     if (!user) {
@@ -112,7 +312,8 @@ export default function Practice() {
     return () => {
       cancelled = true;
     };
-  }, [filters.pool, filters.difficulty, filters.topic, debounced, solvedPage, user, refresh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.pool, filters.difficulty, filters.topic, debounced, solvedPage, user?.id, refresh]);
 
   const update = (patch) => {
     setFilters((f) => ({ ...f, ...patch }));
@@ -120,32 +321,69 @@ export default function Practice() {
     setSolvedPage(1);
   };
 
-  const toggleSolved = async (slug) => {
-    const inSolved = (solvedData?.problems || []).some((p) => p.slug === slug);
-    try {
-      await api.users.setSolved(slug, !inSolved);
-      setRefresh((n) => n + 1);
-    } catch (err) {
-      toast.error(err.message);
-    }
-  };
+  // Returns the XP delta so the row can float it.
+  const toggleSolved = useCallback(
+    async (slug) => {
+      if (!user) return 0;
+      const inSolved = (solvedData?.problems || []).some((p) => p.slug === slug);
+      try {
+        const res = await api.users.setSolved(slug, !inSolved);
+        if (res.practice) {
+          setUser((u) => (u ? { ...u, practice: res.practice, solvedCount: Math.max(0, (u.solvedCount || 0) + (res.solved ? 1 : -1)) } : u));
+        }
+        if (res.daily) {
+          setDailyClaimed(true);
+          burstConfetti(60);
+          toast.success(`Daily quest complete! +${res.xpGained} XP`);
+        } else if (res.xpGained > 0 && res.practice?.streak > 1 && res.practice.streak > (user.practice?.streak || 0)) {
+          toast(`🔥 ${res.practice.streak}-day streak!`);
+        }
+        if (res.leveledUp && res.practice) setLevelUp(res.practice.level);
+        setRefresh((n) => n + 1);
+        return res.xpGained || 0;
+      } catch (err) {
+        toast.error(err.message);
+        return 0;
+      }
+    },
+    [user, solvedData, setUser]
+  );
 
   const pages = data ? Math.max(1, Math.ceil(data.total / LIMIT)) : 1;
   const solvedPages = solvedData ? Math.max(1, Math.ceil(solvedData.total / SOLVED_LIMIT)) : 1;
+  const dailySlug = daily?.problem?.slug;
 
   return (
     <div className="space-y-6">
+      {levelUp && <LevelUpOverlay level={levelUp} title={titleFor(levelUp)} onDone={() => setLevelUp(null)} />}
+
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-bold text-white">Practice</h1>
+          <p className="hud-title text-easy">Training grounds</p>
+          <h1 className="font-display text-3xl font-black text-white sm:text-4xl">Practice</h1>
           <p className="mt-1 max-w-2xl text-ink-400">
-            Warm up on the same problem bank battles draw from. Mark a problem solved and it leaves this list. Battles can skip it when you opt in.
+            Warm up on the same problem bank battles draw from. Every solve earns XP, keeps your streak alive and levels up your skill map.
           </p>
         </div>
-        <Link to="/new?mode=battle" className="btn-primary">
+        <Link to="/new?mode=battle" className="btn-play">
           <Swords className="h-4 w-4" /> Turn it into a battle
         </Link>
       </div>
+
+      {user ? (
+        <TrainerCard user={user} />
+      ) : (
+        <div className="hud-panel flex flex-wrap items-center justify-between gap-4 p-5">
+          <p className="text-sm text-ink-300">Sign in to earn XP, build streaks and unlock your skill map.</p>
+          <Link to="/login" state={{ from: '/practice' }} className="btn-primary btn-sm">
+            Sign in
+          </Link>
+        </div>
+      )}
+
+      <DailyBanner daily={daily} onToggle={user ? toggleSolved : null} solvedNow={dailyClaimed || (user && user.practice?.dailyDone)} />
+
+      {user && <MasteryMap progress={progress} activeTopic={filters.topic} onPick={(topic) => update({ topic, pool: 'curated' })} />}
 
       <div className="card flex flex-wrap items-center gap-3 p-4">
         <div className="inline-flex rounded-xl border border-ink-700 bg-ink-950/60 p-1">
@@ -180,11 +418,11 @@ export default function Practice() {
         </select>
       </div>
 
-      <section className="card overflow-hidden">
+      <section className="hud-panel">
         <div className="flex items-center justify-between border-b border-ink-800 px-4 py-3">
           <div>
             <h2 className="font-semibold text-white">Problem bank</h2>
-            <p className="text-xs text-ink-500">Still to solve</p>
+            <p className="text-xs text-ink-500">Still to solve · tick the circle once LeetCode accepts it</p>
           </div>
           {data && <span className="font-mono text-sm text-ink-400">{data.total}</span>}
         </div>
@@ -194,8 +432,8 @@ export default function Practice() {
           </div>
         ) : data?.problems.length ? (
           <ul className={clsx('divide-y divide-ink-800/70', loading && 'opacity-60')}>
-            {data.problems.map((p) => (
-              <ProblemRow key={p.slug} problem={p} done={false} canTrack={!!user} onToggle={toggleSolved} />
+            {data.problems.map((p, i) => (
+              <ProblemRow key={p.slug} index={i} problem={p} done={false} canTrack={!!user} onToggle={toggleSolved} isDaily={p.slug === dailySlug} />
             ))}
           </ul>
         ) : (
@@ -210,7 +448,7 @@ export default function Practice() {
         <div className="flex items-center justify-between border-b border-easy/20 bg-easy/5 px-4 py-3">
           <div>
             <h2 className="font-semibold text-white">Solved</h2>
-            <p className="text-xs text-ink-400">Kept apart from the bank. Click a check to move one back.</p>
+            <p className="text-xs text-ink-400">Kept apart from the bank. Click a check to move one back (the XP goes with it).</p>
           </div>
           <span className="font-mono text-sm text-easy">{user ? solvedData?.total ?? 0 : 0}</span>
         </div>
@@ -227,8 +465,8 @@ export default function Practice() {
           </div>
         ) : solvedData?.problems.length ? (
           <ul className={clsx('divide-y divide-ink-800/70', solvedLoading && 'opacity-60')}>
-            {solvedData.problems.map((p) => (
-              <ProblemRow key={p.slug} problem={p} done canTrack onToggle={toggleSolved} />
+            {solvedData.problems.map((p, i) => (
+              <ProblemRow key={p.slug} index={i} problem={p} done canTrack onToggle={toggleSolved} isDaily={p.slug === dailySlug} />
             ))}
           </ul>
         ) : (
