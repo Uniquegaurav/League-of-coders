@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import { Swords } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Spinner } from '../components/ui';
-import crystalCave from '../assets/bg/crystal-cave.jpg';
 
 export default function AuthPage() {
   const { user, login, register, googleLogin } = useAuth();
@@ -45,30 +44,32 @@ export default function AuthPage() {
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   return (
-    <div className="mx-auto grid max-w-5xl grid-cols-1 overflow-hidden rounded-3xl border border-ink-700 bg-ink-900 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-      <div className="relative min-h-[180px] md:min-h-[600px]">
-        <img src={crystalCave} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover object-center" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink-950/95 via-ink-950/40 to-ink-950/10" />
-        <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500">
-            <Swords className="h-6 w-6 text-white" />
-          </span>
-          <p className="mt-4 font-display text-2xl font-bold text-white">League of Coders</p>
-          <p className="mt-1 text-sm text-ink-300">Battle friends on real LeetCode problems.</p>
-        </div>
+    <div className="grid min-h-[calc(100vh-12rem)] grid-cols-1 items-center gap-10 py-6 lg:grid-cols-[minmax(0,1fr)_440px]">
+      <div className="hidden lg:block">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-neon-400">League of Coders</p>
+        <p className="mt-4 max-w-lg font-display text-6xl font-bold leading-[1.05] tracking-tight text-white drop-shadow-lg">
+          Enter the
+          <br />
+          <span className="bg-gradient-to-r from-neon-400 via-brand-400 to-fuchsia-400 bg-clip-text text-transparent">arena.</span>
+        </p>
+        <p className="mt-5 max-w-md text-lg text-ink-200">Battle friends on real LeetCode problems and climb the ranks.</p>
       </div>
 
-      <div className="flex flex-col justify-center px-6 py-10 sm:px-10">
-        <h1 className="font-display text-3xl font-bold text-white">{mode === 'login' ? 'Welcome back' : 'Create your account'}</h1>
+      <div className="rounded-3xl border border-white/10 bg-ink-950/70 p-7 shadow-2xl backdrop-blur-xl sm:p-9">
+        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500 lg:hidden">
+          <Swords className="h-6 w-6 text-white" />
+        </span>
+        <h1 className="mt-4 font-display text-3xl font-bold text-white lg:mt-0">{mode === 'login' ? 'Welcome back' : 'Create your account'}</h1>
         <p className="mt-1 text-ink-400">{mode === 'login' ? 'Sign in to continue.' : 'Join in a few seconds.'}</p>
 
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex justify-start">
           <GoogleLogin
             theme="filled_blue"
             size="large"
             shape="pill"
             width="320"
             text="continue_with"
+            logo_alignment="left"
             onSuccess={async ({ credential }) => {
               try {
                 done(await googleLogin(credential));

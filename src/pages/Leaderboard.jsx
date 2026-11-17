@@ -7,7 +7,6 @@ import { tierFor } from '../lib/rank';
 import usePolling from '../hooks/usePolling';
 import { useAuth } from '../context/AuthContext';
 import { Avatar, EmptyState, PageBanner, PageLoader, VerifiedBadge } from '../components/ui';
-import lightRays from '../assets/bg/light-rays.jpg';
 
 export default function Leaderboard() {
   const { user } = useAuth();
@@ -22,9 +21,6 @@ export default function Leaderboard() {
   return (
     <div className="space-y-6">
       <PageBanner
-        image={lightRays}
-        position="left top"
-        flip
         title="Leaderboard"
         info={
           <>

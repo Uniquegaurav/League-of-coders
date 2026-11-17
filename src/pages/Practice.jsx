@@ -7,7 +7,6 @@ import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { streakOf } from '../lib/progression';
 import { DifficultyBadge, EmptyState, PageBanner, ProgressBar, Spinner } from '../components/ui';
-import circuit from '../assets/bg/circuit.jpg';
 
 const LIMIT = 30;
 const TABS = [
@@ -315,7 +314,6 @@ export default function Practice() {
   return (
     <div className="space-y-6">
       <PageBanner
-        image={circuit}
         title="Practice"
         info={
           <>

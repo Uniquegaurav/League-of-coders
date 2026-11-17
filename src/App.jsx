@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Backdrop from './components/Backdrop';
 import ErrorBoundary from './components/ErrorBoundary';
 import { PageLoader } from './components/ui';
 import { useAuth } from './context/AuthContext';
@@ -53,10 +54,11 @@ export default function App() {
   const fullBleed = pathname.startsWith('/m/');
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="relative flex min-h-screen flex-col">
       <ScrollToTop />
+      <Backdrop />
       <Navbar />
-      <main className={fullBleed ? 'flex-1' : 'mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6'}>
+      <main className={fullBleed ? 'relative flex-1' : 'relative mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6'}>
         <ErrorBoundary key={pathname}>
         <Suspense fallback={<PageLoader />}>
           <Routes>
@@ -86,7 +88,7 @@ export default function App() {
         </ErrorBoundary>
       </main>
       {!fullBleed && (
-        <footer className="border-t border-ink-800/80 py-8 text-center text-xs text-ink-500">
+        <footer className="relative border-t border-ink-800/80 py-8 text-center text-xs text-ink-500">
           League of Coders · Problems and submissions are powered by LeetCode · Built for friendly competition
         </footer>
       )}
