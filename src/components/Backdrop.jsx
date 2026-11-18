@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 import compete from '../assets/bg/compete.jpg';
@@ -30,38 +29,14 @@ const DIM = {
   none: 'bg-ink-950/30',
 };
 
-// The scene drifts a little slower than the page as you scroll. Off for reduced motion.
-function useParallax(ref, factor = 0.25) {
-  useEffect(() => {
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
-    let frame = 0;
-    const onScroll = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        if (ref.current) ref.current.style.transform = `translate3d(0, ${Math.min(window.scrollY, 900) * factor}px, 0)`;
-      });
-    };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener('scroll', onScroll);
-    };
-  }, [ref, factor]);
-}
-
 export default function Backdrop() {
   const { pathname } = useLocation();
-  const layer = useRef(null);
-  useParallax(layer);
   const scene = SCENES.find((s) => s.test(pathname));
   if (!scene) return null;
   return (
     <div aria-hidden className={clsx('pointer-events-none absolute inset-x-0 top-0 overflow-hidden', scene.height || 'h-[460px] sm:h-[520px]')}>
-      <div ref={layer} className="h-full w-full will-change-transform">
-       <div key={scene.src} className="backdrop-in h-full w-full">
+      <div key={scene.src} className="backdrop-in h-full w-full">
         <img src={scene.src} alt="" className={clsx('h-full w-full object-cover', scene.flip && '-scale-x-100')} style={{ objectPosition: scene.position }} />
-       </div>
       </div>
       <div className="absolute inset-0 bg-gradient-to-r from-ink-950/80 via-ink-950/30 to-transparent" />
       <div className={clsx('absolute inset-0', DIM[scene.dim || 'normal'])} />
