@@ -14,6 +14,7 @@ const MatchRoom = lazy(() => import('./pages/MatchRoom'));
 const Practice = lazy(() => import('./pages/Practice'));
 const ProblemPage = lazy(() => import('./pages/ProblemPage'));
 const Tournaments = lazy(() => import('./pages/Tournaments'));
+const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 const Community = lazy(() => import('./pages/Community'));
 const Profile = lazy(() => import('./pages/Profile'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
@@ -108,7 +109,7 @@ export default function App() {
             <Route path="/problems/:slug" element={<ProblemPage />} />
             <Route path="/tournaments" element={<Tournaments />} />
             <Route path="/league" element={<KeepQuery to="/tournaments" />} />
-            <Route path="/leaderboard" element={<KeepQuery to="/tournaments" />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/community" element={<Community />} />
             <Route path="/u/:id" element={<Profile />} />
             <Route path="/c/:code" element={<ChallengePage />} />

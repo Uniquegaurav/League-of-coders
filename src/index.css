@@ -386,21 +386,3 @@
   }
 }
 
-/* Tournament art floats very slightly. */
-@keyframes art-drift {
-  0%,
-  100% {
-    transform: translate(260px, 105px);
-  }
-  50% {
-    transform: translate(260px, 98px);
-  }
-}
-.art-drift {
-  animation: art-drift 6s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .art-drift {
-    animation: none;
-  }
-}

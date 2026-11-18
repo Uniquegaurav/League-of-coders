@@ -6,12 +6,8 @@ import { api } from '../../lib/api';
 import { tierFor } from '../../lib/rank';
 import usePolling from '../../hooks/usePolling';
 import { useAuth } from '../../context/AuthContext';
-import { Avatar, InfoTip, Spinner } from '../ui';
+import { Avatar, Spinner } from '../ui';
 
-const BOARDS = [
-  ['rating', 'Rating'],
-  ['xp', 'XP'],
-];
 const SCOPES = [
   ['global', 'Global'],
   ['friends', 'Friends'],
@@ -72,7 +68,7 @@ function Podium({ players, board }) {
   );
 }
 
-/** Rankings with two boards: Rating (skill, from tournaments) and XP (effort, from everything). */
+/** Rankings list for the board chosen on the Leaderboard page (?board=rating|xp), with scope and period filters. */
 export default function Ranking() {
   const { user } = useAuth();
   const [params, setParams] = useSearchParams();
@@ -200,24 +196,15 @@ export default function Ranking() {
   return (
     <section className="panel p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Tabs value={board} options={BOARDS} onChange={(b) => set({ board: b === 'rating' ? null : b, scope: scope === 'colleges' && b === 'xp' ? null : scope === 'global' ? null : scope })} />
-          <InfoTip label="Rating and XP">
-            <strong className="text-white">Rating</strong> measures skill. It only moves in tournaments (battle hour, Sunday Cup, planned events), using
-            multiplayer Elo: beating stronger players gains more, and your first 10 tournaments move it faster.{' '}
-            <strong className="text-white">XP</strong> measures effort: every verified solve in a battle or solo test (Easy 15, Medium 30, Hard 60), a
-            placement bonus, 1.5x in tournaments, practice ticks (capped at 150 a day) and streak days.
-          </InfoTip>
+        <div className="-mx-1 overflow-x-auto px-1 pb-1">
+          <Tabs
+            size="sm"
+            value={scope}
+            options={board === 'xp' ? SCOPES.filter(([k]) => k !== 'colleges') : SCOPES}
+            onChange={(s) => set({ scope: s === 'global' ? null : s, college: null })}
+          />
         </div>
         {board === 'xp' && <Tabs size="sm" value={period} options={PERIODS} onChange={(p) => set({ period: p === 'week' ? null : p })} />}
-      </div>
-      <div className="mt-3 -mx-1 overflow-x-auto px-1 pb-1">
-        <Tabs
-          size="sm"
-          value={scope}
-          options={board === 'xp' ? SCOPES.filter(([k]) => k !== 'colleges') : SCOPES}
-          onChange={(s) => set({ scope: s === 'global' ? null : s, college: null })}
-        />
       </div>
       {scope === 'college' && data?.college && <p className="mt-3 text-xs text-ink-500">{data.college}</p>}
       <div className="mt-2">{body}</div>

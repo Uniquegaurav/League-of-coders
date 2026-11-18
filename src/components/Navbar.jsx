@@ -12,6 +12,7 @@ const LINKS = [
   { to: '/', label: 'Compete', end: true },
   { to: '/practice', label: 'Practice' },
   { to: '/tournaments', label: 'Tournaments' },
+  { to: '/leaderboard', label: 'Leaderboard' },
   { to: '/community', label: 'Community' },
 ];
 

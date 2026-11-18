@@ -591,7 +591,7 @@ export default function Profile() {
                 )}
                 {player.college && (
                   <>
-                    <Link to={`/tournaments?scope=college&college=${encodeURIComponent(player.college)}`} className="inline-flex items-center gap-1 hover:text-white hover:underline">
+                    <Link to={`/leaderboard?scope=college&college=${encodeURIComponent(player.college)}`} className="inline-flex items-center gap-1 hover:text-white hover:underline">
                       <GraduationCap className="h-3.5 w-3.5" /> {player.college}
                     </Link>
                     <span className="text-ink-500"> · </span>

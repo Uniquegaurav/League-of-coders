@@ -3,7 +3,7 @@
 
 function Frame({ from, children }) {
   return (
-    <div className={`relative h-32 overflow-hidden rounded-t-2xl bg-gradient-to-br ${from} to-ink-950`}>
+    <div className={`relative h-32 overflow-hidden bg-gradient-to-br sm:h-full sm:min-h-[8.5rem] ${from} to-ink-950`}>
       <div aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_50%_55%,rgba(255,255,255,0.07),transparent_60%)]" />
       <div aria-hidden className="absolute inset-0 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
         {children}
@@ -40,25 +40,6 @@ export function SoloArt() {
           <line x1="50" y1="54" x2="50" y2="22" stroke="#ffe1e6" strokeWidth="2.5" strokeLinecap="round" />
         </g>
         <circle cx="50" cy="54" r="3.5" fill="#ffe1e6" />
-      </svg>
-    </Frame>
-  );
-}
-
-/** Quick play: a lightning bolt with energy rings pulsing out from it. */
-export function QuickArt() {
-  return (
-    <Frame from="from-neon-500/25 via-ink-900">
-      <span className="ring-pulse absolute h-24 w-24 rounded-full border border-neon-400/40" />
-      <span className="absolute h-20 w-20 rounded-full bg-neon-500/10" />
-      <svg viewBox="0 0 64 64" className="relative h-16 w-16 drop-shadow-[0_0_10px_rgba(94,234,212,0.5)]">
-        <defs>
-          <linearGradient id="bolt" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#d5fff7" />
-            <stop offset="1" stopColor="#22d3ee" />
-          </linearGradient>
-        </defs>
-        <path d="M36 4 L12 36 H29 L24 60 L52 24 H34 Z" fill="url(#bolt)" stroke="#0b3d3a" strokeWidth="1.5" strokeLinejoin="round" />
       </svg>
     </Frame>
   );
