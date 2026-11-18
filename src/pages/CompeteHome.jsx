@@ -223,7 +223,7 @@ export default function CompeteHome() {
               <Swords className="h-5 w-5" /> Start a battle
             </Link>
             <div className="flex-1">
-              <JoinByCode />
+              <JoinByCode onImage />
             </div>
           </div>
         </div>
