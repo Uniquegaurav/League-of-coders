@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { ArrowDown, ArrowRight, Link2, Swords, Timer, TrendingUp, UserPlus, Zap } from 'lucide-react';
+import { ArrowDown, ArrowRight, Link2, Plus, Swords, Timer, TrendingUp, UserPlus, Zap } from 'lucide-react';
 import { api } from '../lib/api';
 import { track } from '../lib/analytics';
 import { SoloArt } from '../components/home/ModeArt';
@@ -238,14 +238,35 @@ function ModeRow({ art, title, info, body, action }) {
   );
 }
 
-const OPEN_SHOWN = 4; // the rest sit behind "Show all"
+const OPEN_SHOWN = 4; // on Compete; "Show all" opens the full list across the page
 
-// Lobbies you can join (battle hour first, then the fullest), then battles you can watch.
-function OpenBattles({ user, lobbies, live, loading, nextEvent }) {
-  const [all, setAll] = useState(false);
-  const joinable = [...lobbies].sort((a, b) => Number(!!b.event) - Number(!!a.event) || b.players - a.players);
-  const list = [...joinable, ...live];
-  const shown = all ? list : list.slice(0, OPEN_SHOWN);
+// Battle hour first, then the fullest lobbies, then battles already running (to watch).
+export const orderBattles = (lobbies, live) => [
+  ...[...lobbies].sort((a, b) => Number(!!b.event) - Number(!!a.event) || b.players - a.players),
+  ...live,
+];
+
+// The last tile of a battle grid: start your own.
+function HostTile({ user }) {
+  return (
+    <Link
+      {...authed(user, '/new?mode=battle')}
+      className="flex min-h-[10rem] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 p-5 text-center text-ink-300 transition hover:border-brand-500/60 hover:bg-white/[0.03] hover:text-white"
+    >
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500/15 text-brand-300">
+        <Plus className="h-5 w-5" />
+      </span>
+      <span className="font-semibold">Host a battle</span>
+      <span className="text-xs text-ink-500">Pick the problems, share the link</span>
+    </Link>
+  );
+}
+
+function OpenBattles({ user, lobbies, live, loading, nextEvent, expanded, onExpand }) {
+  const list = orderBattles(lobbies, live);
+  const shown = list.slice(0, OPEN_SHOWN);
+  // Keep the 2-column grid even: an odd count gets the host tile as its partner.
+  const withHost = shown.length % 2 === 1;
   return (
     <section className="panel">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 sm:px-6">
@@ -258,24 +279,35 @@ function OpenBattles({ user, lobbies, live, loading, nextEvent }) {
             </InfoTip>
           </h2>
           <p className="mt-1 text-sm text-ink-300">
-            {joinable.length} open{live.length ? ` · ${live.length} live` : ''}
+            {lobbies.length} open{live.length ? ` · ${live.length} live` : ''}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {loading && <Spinner className="h-4 w-4 text-ink-500" />}
+          <Link {...authed(user, '/new?mode=battle')} className="btn-secondary">
+            <Plus className="h-4 w-4" /> Host
+          </Link>
           <QuickPlay user={user} lobbies={lobbies} />
         </div>
       </div>
-      {list.length ? (
+      {list.length && expanded ? (
+        <p className="px-5 pb-5 pt-3 text-sm text-ink-400 sm:px-6">
+          All {list.length} battles are listed below.{' '}
+          <button className="text-brand-400 hover:underline" onClick={onExpand}>
+            Collapse
+          </button>
+        </p>
+      ) : list.length ? (
         <div className="p-4 sm:p-5">
           <div className="grid gap-4 sm:grid-cols-2">
             {shown.map((m) => (
               <MatchCard key={m.code} match={m} />
             ))}
+            {withHost && <HostTile user={user} />}
           </div>
           {list.length > OPEN_SHOWN && (
-            <button className="mt-4 text-sm text-brand-400 hover:underline" onClick={() => setAll((v) => !v)}>
-              {all ? 'Show fewer' : `Show all ${list.length}`}
+            <button className="mt-4 text-sm text-brand-400 hover:underline" onClick={onExpand}>
+              Show all {list.length} battles
             </button>
           )}
         </div>
@@ -296,6 +328,60 @@ function OpenBattles({ user, lobbies, live, loading, nextEvent }) {
           </EmptyState>
         )
       )}
+    </section>
+  );
+}
+
+// Every open battle, across the full page width, once "Show all" is pressed.
+function AllBattles({ user, lobbies, live, onClose }) {
+  const list = orderBattles(lobbies, live);
+  return (
+    <section id="all-battles" className="panel scroll-mt-24 p-5 sm:p-6">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="font-display text-lg font-semibold text-white">All open battles · {list.length}</h2>
+        <button className="text-sm text-brand-400 hover:underline" onClick={onClose}>
+          Hide
+        </button>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {list.map((m) => (
+          <MatchCard key={m.code} match={m} />
+        ))}
+        <HostTile user={user} />
+      </div>
+    </section>
+  );
+}
+
+// Top 5 by XP this week (what Compete earns), falling back to all time early in the week.
+function TopThisWeek() {
+  const { data } = usePolling(async () => {
+    const week = await api.users.leaderboard(5, { board: 'xp', period: 'week' });
+    if (week.players?.length) return { players: week.players, period: 'week' };
+    const all = await api.users.leaderboard(5, { board: 'xp', period: 'all' });
+    return { players: all.players || [], period: 'all' };
+  }, 60000);
+  if (!data?.players?.length) return null;
+  return (
+    <section className="panel p-5">
+      <div className="mb-3 flex items-baseline justify-between">
+        <h2 className="section-title">{data.period === 'week' ? 'Top this week' : 'Top players'}</h2>
+        <Link to={`/leaderboard?board=xp${data.period === 'all' ? '&period=all' : ''}`} className="text-sm text-brand-400 hover:underline">
+          Leaderboard
+        </Link>
+      </div>
+      <ol className="space-y-1">
+        {data.players.map((p, i) => (
+          <li key={p.id}>
+            <Link to={`/u/${p.username || p.id}`} className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/[0.04]">
+              <span className="w-4 text-center font-mono text-sm text-ink-500">{i + 1}</span>
+              <Avatar name={p.name} src={p.avatar} size={28} />
+              <span className="min-w-0 flex-1 truncate text-sm text-ink-100">{p.name}</span>
+              <span className="font-mono text-xs text-neon-400">{(p.value ?? p.practice?.xp ?? 0).toLocaleString()} XP</span>
+            </Link>
+          </li>
+        ))}
+      </ol>
     </section>
   );
 }
@@ -345,6 +431,7 @@ export default function CompeteHome() {
   const events = usePolling(() => api.events.list().then((r) => r.upcoming).catch(() => []), 60000);
   const nextEvent = events.data?.[0];
 
+  const [allOpen, setAllOpen] = useState(false);
   const mineCodes = new Set((mine.data || []).map((m) => m.code));
   const others = (open.data || []).filter((m) => !mineCodes.has(m.code));
   const live = others.filter((m) => m.status !== 'lobby');
@@ -414,28 +501,46 @@ export default function CompeteHome() {
             }
           />
 
-          <OpenBattles user={user} lobbies={lobbies} live={live} loading={open.loading && !open.data} nextEvent={nextEvent} />
+          <OpenBattles
+            user={user}
+            lobbies={lobbies}
+            live={live}
+            loading={open.loading && !open.data}
+            nextEvent={nextEvent}
+            expanded={allOpen}
+            onExpand={() => {
+              setAllOpen((v) => !v);
+              // Bring the full list into view once it renders.
+              requestAnimationFrame(() => document.getElementById('all-battles')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+            }}
+          />
         </div>
 
         <aside className="space-y-5">
           {user && <StatsCard user={user} />}
+          <TopThisWeek />
           <RecentResults matches={recent.data} />
           <FriendsPanel lobbyCode={myLobby?.code} />
           <FriendActivity user={user} />
         </aside>
       </div>
 
+      {allOpen && <AllBattles user={user} lobbies={lobbies} live={live} onClose={() => setAllOpen(false)} />}
+
       {/* Reference material sits at the bottom, full width, reached from the "How it works" link in the hero. */}
-      <section id="how-it-works" className="scroll-mt-24 space-y-8 pt-4">
-        <div>
-          <h2 className="section-title mb-6 text-center text-2xl">How it works</h2>
-          <div className="mx-auto max-w-5xl">
+      <section id="how-it-works" className="scroll-mt-24 pt-4">
+        <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+          <div>
+            <h2 className="section-title mb-6 text-2xl">How it works</h2>
             <HowItWorks />
           </div>
-        </div>
-        <div className="panel mx-auto max-w-5xl p-6">
-          <h2 className="section-title mb-4">How scoring works</h2>
-          <ScoringRules />
+          <div className="panel p-6">
+            <h2 className="section-title mb-4">How scoring works</h2>
+            <ScoringRules compact />
+            <p className="mt-4 text-xs leading-5 text-ink-500">
+              Ties go to whoever solved more, then to the earlier last solve. Tournaments move your rating. Every battle and solo test earns XP.
+            </p>
+          </div>
         </div>
       </section>
     </div>
