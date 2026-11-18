@@ -8,7 +8,7 @@ import usePolling from '../../hooks/usePolling';
 import { useNow } from '../match/EventCard';
 import { Avatar } from '../ui';
 
-const DIFF = { Easy: 'text-easy', Medium: 'text-medium', Hard: 'text-hard' };
+const DIFF_DOT = { Easy: 'bg-easy', Medium: 'bg-medium', Hard: 'bg-hard' };
 const keyOf = (item) => `${item.type}:${item.match.code}:${item.name}:${item.problem || ''}:${item.at}`;
 
 function LiveBattle({ battle, now }) {
@@ -47,11 +47,15 @@ function FeedItem({ item, fresh }) {
           </>
         ) : (
           <>
-            solved <span className={DIFF[item.difficulty] || 'text-ink-200'}>{item.problem}</span>
+            solved{' '}
+            <span className="text-ink-100">
+              <span className={clsx('mr-1.5 inline-block h-1.5 w-1.5 -translate-y-0.5 rounded-full', DIFF_DOT[item.difficulty] || 'bg-ink-500')} title={item.difficulty} />
+              {item.problem}
+            </span>
           </>
         )}
       </p>
-      {item.type === 'win' ? <Trophy className="h-4 w-4 shrink-0 text-medium" /> : item.firstSolve ? <Flame className="h-4 w-4 shrink-0 text-medium" title="First solve" /> : null}
+      {item.type === 'win' ? <Trophy className="h-4 w-4 shrink-0 text-gold" /> : item.firstSolve ? <Flame className="h-4 w-4 shrink-0 text-fire" title="First solve" /> : null}
       <span className="shrink-0 text-xs text-ink-500">{timeAgo(item.at)}</span>
     </li>
   );

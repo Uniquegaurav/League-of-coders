@@ -7,7 +7,7 @@ import usePolling from '../hooks/usePolling';
 import EventCard from '../components/match/EventCard';
 import { Avatar, EmptyState, InfoTip, Spinner } from '../components/ui';
 
-const PLACE = ['text-medium', 'text-ink-300', 'text-amber-600'];
+const PLACE = ['text-gold', 'text-ink-300', 'text-amber-600'];
 const SHOW_UPCOMING = 4;
 const SHOW_PAST = 3;
 
@@ -41,7 +41,7 @@ export function TournamentsSection() {
 
   const heading = (
     <h2 className="section-title flex items-center gap-2">
-      <Trophy className="h-5 w-5 text-medium" /> Tournaments
+      <Trophy className="h-5 w-5 text-gold" /> Tournaments
       <InfoTip label="About tournaments">
         Every day at the same time there is a public battle hour. On Sundays it becomes the Sunday Cup: 60 minutes, one Easy, two Medium and one Hard.
         Planned tournaments are listed here too. Lobbies open 30 minutes before and start on their own once 2 or more players have joined. Up to 20 players,

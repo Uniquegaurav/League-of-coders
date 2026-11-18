@@ -5,7 +5,7 @@ import { timeAgo } from '../../lib/format';
 
 const STATUS = {
   lobby: { label: 'Open lobby', dot: 'bg-easy', text: 'text-easy' },
-  countdown: { label: 'Starting', dot: 'bg-medium animate-pulse', text: 'text-medium' },
+  countdown: { label: 'Starting', dot: 'bg-warn animate-pulse', text: 'text-warn' },
   live: { label: 'Live', dot: 'bg-hard animate-pulse', text: 'text-hard' },
   finished: { label: 'Finished', dot: 'bg-ink-500', text: 'text-ink-400' },
   cancelled: { label: 'Cancelled', dot: 'bg-ink-600', text: 'text-ink-500' },
@@ -58,7 +58,7 @@ export default function MatchCard({ match, joined }) {
       </div>
       {match.status === 'finished' ? (
         match.winner && (
-          <p className="inline-flex items-center gap-1.5 text-sm text-medium">
+          <p className="inline-flex items-center gap-1.5 text-sm text-ink-200 [&>svg]:text-gold">
             <Trophy className="h-4 w-4" /> {match.winner.name} · {match.winner.score} pts
           </p>
         )

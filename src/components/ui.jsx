@@ -16,9 +16,9 @@ export function PageLoader({ label = 'Loading…' }) {
 }
 
 const DIFFICULTY_STYLES = {
-  Easy: 'text-easy bg-easy/10 border-easy/30',
-  Medium: 'text-medium bg-medium/10 border-medium/30',
-  Hard: 'text-hard bg-hard/10 border-hard/30',
+  Easy: 'text-easy bg-easy/[0.08] border-easy/25',
+  Medium: 'text-medium bg-medium/[0.08] border-medium/25',
+  Hard: 'text-hard bg-hard/[0.08] border-hard/25',
 };
 
 export function DifficultyBadge({ difficulty, className }) {

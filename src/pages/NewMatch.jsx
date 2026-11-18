@@ -107,9 +107,9 @@ export default function NewMatch() {
         </div>
 
         {!user?.leetcode?.verified && (
-          <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-medium/30 bg-medium/5 p-4">
+          <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-warn/30 bg-warn/5 p-4">
             <p className="flex items-center gap-2 text-sm text-ink-200">
-              <Link2 className="h-4 w-4 text-medium" /> {user?.leetcode ? 'Verify your LeetCode account before hosting.' : 'Link your LeetCode account before hosting.'}
+              <Link2 className="h-4 w-4 text-warn" /> {user?.leetcode ? 'Verify your LeetCode account before hosting.' : 'Link your LeetCode account before hosting.'}
             </p>
             <Link to="/u/me" className="btn-secondary btn-sm">
               {user?.leetcode ? 'Verify now' : 'Link now'} <ArrowRight className="h-3.5 w-3.5" />
@@ -136,7 +136,7 @@ export default function NewMatch() {
               <p>Easy {form.settings.easy} × 10</p>
               <p>Medium {form.settings.medium} × 20</p>
               <p>Hard {form.settings.hard} × 35</p>
-              {clock.capped && <p className="text-medium">Capped at 180 minutes.</p>}
+              {clock.capped && <p className="text-warn">Capped at 180 minutes.</p>}
               <p className="text-ink-500">Solo tests are private and do not change your rating.</p>
             </div>
           ) : (
