@@ -18,11 +18,11 @@ const LINKS = [
 export function Logo() {
   return (
     <Link to="/" className="flex items-center gap-2.5">
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-neon-500 shadow-glow ring-2 ring-medium/80">
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-neon-500 shadow-glow ring-2 ring-amber-400/80">
         <Swords className="h-5 w-5 text-white" />
       </span>
       <span className="font-display text-lg font-bold tracking-tight text-white">
-        League<span className="text-medium">of</span>Coders
+        League<span className="text-amber-400">of</span>Coders
       </span>
     </Link>
   );

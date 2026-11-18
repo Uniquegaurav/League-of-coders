@@ -54,7 +54,7 @@ export default function MatchRoom() {
   return (
     <>
       {!connected && (
-        <div className="flex items-center justify-center gap-2 bg-medium/15 py-1.5 text-xs text-medium">
+        <div className="flex items-center justify-center gap-2 bg-warn/15 py-1.5 text-xs text-warn">
           <WifiOff className="h-3.5 w-3.5" /> Reconnecting to live updates…
         </div>
       )}

@@ -21,9 +21,9 @@ import { Avatar, DifficultyBadge, EmptyState, InfoTip, Spinner, VerifiedBadge } 
 
 function LinkLeetCodeBanner({ linked }) {
   return (
-    <div className="card flex flex-col items-start justify-between gap-4 border-medium/30 bg-medium/5 p-5 sm:flex-row sm:items-center">
+    <div className="card flex flex-col items-start justify-between gap-4 border-warn/30 bg-warn/5 p-5 sm:flex-row sm:items-center">
       <div className="flex gap-3">
-        <Link2 className="mt-0.5 h-5 w-5 shrink-0 text-medium" />
+        <Link2 className="mt-0.5 h-5 w-5 shrink-0 text-warn" />
         <div>
           <p className="font-semibold text-white">{linked ? 'Verify your LeetCode account to keep competing' : 'Link your LeetCode account to start competing'}</p>
           <p className="text-sm text-ink-400">

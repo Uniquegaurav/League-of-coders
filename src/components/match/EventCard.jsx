@@ -27,8 +27,8 @@ export default function EventCard({ event, className }) {
   const Icon = cup ? Trophy : CalendarClock;
 
   return (
-    <div className={clsx('card card-hover flex flex-col gap-4 p-5 sm:flex-row sm:items-center', cup && 'border-medium/30', className)}>
-      <span className={clsx('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', cup ? 'bg-medium/15 text-medium' : 'bg-brand-500/15 text-brand-400')}>
+    <div className={clsx('card card-hover flex flex-col gap-4 p-5 sm:flex-row sm:items-center', cup && 'border-gold/30', className)}>
+      <span className={clsx('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', cup ? 'bg-gold/15 text-gold' : 'bg-brand-500/15 text-brand-400')}>
         <Icon className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">

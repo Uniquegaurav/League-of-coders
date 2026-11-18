@@ -18,9 +18,16 @@ export default {
         },
         brand: { 400: '#a18bff', 500: '#7c5cff', 600: '#6542f5' },
         neon: { 400: '#5eead4', 500: '#22d3ee' },
-        easy: '#34d399',
-        medium: '#fbbf24',
-        hard: '#fb7185',
+        // Difficulty colours: only for Easy / Medium / Hard markers (and good / bad rating changes).
+        easy: '#5fd4a8',
+        medium: '#f2c46d',
+        hard: '#f48a9b',
+        // Winners, crowns and trophies (icons, not text).
+        gold: '#e3c77a',
+        // Warnings and "needs attention" states.
+        warn: '#f0a868',
+        // First-solve flames.
+        fire: '#f7a072',
       },
       fontFamily: {
         sans: ['Satoshi', 'ui-sans-serif', 'system-ui', 'sans-serif'],

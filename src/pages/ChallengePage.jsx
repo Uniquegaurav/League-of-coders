@@ -96,7 +96,7 @@ export default function ChallengePage() {
     <div className="space-y-8">
       <section className="grid items-end gap-8 pt-6 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)]">
         <div className="min-w-0">
-          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-medium">
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-brand-400">
             Beat my score
             <InfoTip label="How challenges work">
               Everyone gets the same problems and the same clock, and plays solo whenever they like. Solves are read from your accepted LeetCode
@@ -149,7 +149,7 @@ export default function ChallengePage() {
           <div className="card divide-y divide-ink-800/70">
             {c.leaderboard.map((row) => (
               <div key={row.id} className={clsx('flex items-center gap-4 px-5 py-3.5', row.id === user?.id && 'bg-brand-500/5')}>
-                <span className="w-6 text-center font-mono text-sm text-ink-400">{row.rank === 1 ? <Trophy className="mx-auto h-4 w-4 text-medium" /> : row.rank}</span>
+                <span className="w-6 text-center font-mono text-sm text-ink-400">{row.rank === 1 ? <Trophy className="mx-auto h-4 w-4 text-gold" /> : row.rank}</span>
                 <Avatar name={row.name} src={row.avatar} size={32} />
                 <div className="min-w-0 flex-1">
                   <Link to={`/u/${row.id}`} className="block truncate font-medium text-white hover:underline">

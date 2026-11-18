@@ -157,7 +157,7 @@ export default function Lobby({ match, messages, me, user, setMatch, now }) {
                     <Link to={`/u/${p.id}`} className="truncate hover:underline">
                       {p.name}
                     </Link>
-                    {p.id === match.host && <Crown className="h-3.5 w-3.5 shrink-0 text-medium" title="Host" />}
+                    {p.id === match.host && <Crown className="h-3.5 w-3.5 shrink-0 text-gold" title="Host" />}
                   </p>
                   <p className="flex items-center gap-1 truncate text-xs text-ink-400">
                     @{p.leetcode} <VerifiedBadge verified={p.verified} />

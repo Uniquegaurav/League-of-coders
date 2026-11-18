@@ -664,7 +664,7 @@ export default function Profile() {
                       <span
                         className={clsx(
                           'w-12 shrink-0 rounded-lg py-1 text-center font-mono text-sm font-bold',
-                          won ? 'bg-medium/15 text-medium' : 'bg-ink-800 text-ink-300'
+                          won ? 'bg-gold/15 text-gold' : 'bg-ink-800 text-ink-300'
                         )}
                       >
                         {ordinal(m.result.rank)}

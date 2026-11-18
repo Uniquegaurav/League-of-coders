@@ -1,6 +1,6 @@
 // Elo bands, styled after a ranked ladder. Everyone starts at 1200 (Gold).
 const TIERS = [
-  { min: 2000, name: 'Challenger', color: 'text-medium' },
+  { min: 2000, name: 'Challenger', color: 'text-gold' },
   { min: 1800, name: 'Master', color: 'text-fuchsia-300' },
   { min: 1600, name: 'Diamond', color: 'text-sky-300' },
   { min: 1400, name: 'Platinum', color: 'text-teal-300' },

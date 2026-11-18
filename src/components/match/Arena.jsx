@@ -115,7 +115,7 @@ export default function Arena({ match, messages, me, user, now }) {
         <div
           className={clsx(
             'flex items-center gap-2 rounded-xl border px-3 py-1.5 font-mono text-xl font-bold tabular-nums',
-            remaining < 60000 ? 'animate-pulse border-hard/50 text-hard' : remaining < 5 * 60000 ? 'border-medium/40 text-medium' : 'border-ink-700 text-white'
+            remaining < 60000 ? 'animate-pulse border-hard/50 text-hard' : remaining < 5 * 60000 ? 'border-warn/40 text-warn' : 'border-ink-700 text-white'
           )}
         >
           <Timer className="h-5 w-5" /> {clock(remaining)}

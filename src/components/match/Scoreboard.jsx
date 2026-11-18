@@ -19,7 +19,7 @@ export default function Scoreboard({ match, userId, className }) {
           return (
             <li key={p.id} className={clsx('flex items-center gap-3 px-4 py-2.5', p.id === userId && 'bg-brand-500/10', p.left && 'opacity-50')}>
               <span className="w-5 text-center font-mono text-sm font-bold text-ink-400">
-                {i === 0 && p.score > 0 ? <Crown className="h-4 w-4 text-medium" /> : i + 1}
+                {i === 0 && p.score > 0 ? <Crown className="h-4 w-4 text-gold" /> : i + 1}
               </span>
               <Avatar name={p.name} src={p.avatar} size={28} online={p.online} />
               <div className="min-w-0 flex-1">
@@ -40,7 +40,7 @@ export default function Scoreboard({ match, userId, className }) {
                           title={s ? `${prob.title}: +${s.points}${s.firstSolve ? ' (first solve)' : ''}` : prob.title}
                           className={clsx(
                             'flex h-4 w-4 items-center justify-center rounded text-[9px] font-bold',
-                            s ? (s.firstSolve ? 'bg-medium text-ink-950' : 'bg-easy text-ink-950') : 'bg-ink-800 text-ink-500'
+                            s ? (s.firstSolve ? 'bg-fire text-ink-950' : 'bg-easy text-ink-950') : 'bg-ink-800 text-ink-500'
                           )}
                         >
                           {s?.firstSolve ? <Flame className="h-2.5 w-2.5" /> : letter(idx)}

@@ -13,7 +13,7 @@ function Hints({ hints }) {
         <div key={i} className="rounded-xl border border-ink-700 bg-ink-950/40">
           <button className="flex w-full items-center justify-between px-4 py-2.5 text-sm text-ink-300" onClick={() => setOpen(open === i ? -1 : i)}>
             <span className="flex items-center gap-2">
-              <Lightbulb className="h-4 w-4 text-medium" /> Hint {i + 1}
+              <Lightbulb className="h-4 w-4 text-gold" /> Hint {i + 1}
             </span>
             <ChevronDown className={`h-4 w-4 transition ${open === i ? 'rotate-180' : ''}`} />
           </button>

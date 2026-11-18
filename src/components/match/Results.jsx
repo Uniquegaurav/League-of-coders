@@ -15,7 +15,7 @@ import { letter } from './Scoreboard';
 
 const PODIUM = [
   { place: 2, height: 'h-24', ring: 'ring-ink-300', text: 'text-ink-300' },
-  { place: 1, height: 'h-32', ring: 'ring-medium', text: 'text-medium' },
+  { place: 1, height: 'h-32', ring: 'ring-gold', text: 'text-gold' },
   { place: 3, height: 'h-16', ring: 'ring-amber-700', text: 'text-amber-600' },
 ];
 
@@ -215,7 +215,7 @@ export default function Results({ match, messages, me, user }) {
           <div className="card flex items-end justify-center gap-2 px-3 pb-0 pt-8 sm:gap-4 sm:px-6">
             {podium.map(({ place, height, ring, text, player }) => (
               <div key={place} className="flex min-w-0 max-w-[8rem] flex-1 flex-col items-center">
-                {place === 1 && <Trophy className="mb-2 h-7 w-7 text-medium" />}
+                {place === 1 && <Trophy className="mb-2 h-7 w-7 text-gold" />}
                 <Avatar name={player.name} src={player.avatar} size={place === 1 ? 64 : 52} className={clsx('rounded-full ring-4', ring)} />
                 <p className="mt-2 max-w-full truncate text-sm font-semibold text-white">{player.name}</p>
                 <p className="font-mono text-xs text-ink-400">{player.score} pts</p>
@@ -261,7 +261,7 @@ export default function Results({ match, messages, me, user }) {
                         return (
                           <td key={prob.slug} className="px-2 py-3 text-center">
                             {s ? (
-                              <span className={clsx('inline-flex flex-col items-center', s.firstSolve ? 'text-medium' : 'text-easy')}>
+                              <span className={clsx('inline-flex flex-col items-center', s.firstSolve ? 'text-fire' : 'text-easy')}>
                                 <span className="inline-flex items-center gap-0.5 font-mono text-xs font-bold">
                                   {s.firstSolve && <Flame className="h-3 w-3" />}+{s.points}
                                 </span>

@@ -19,7 +19,7 @@ const TABS = [
 const signed = (n) => (n > 0 ? `+${n}` : String(n));
 
 function RankCell({ i }) {
-  return i < 3 ? <Crown className={clsx('h-4 w-4', ['text-medium', 'text-ink-300', 'text-amber-600'][i])} /> : i + 1;
+  return i < 3 ? <Crown className={clsx('h-4 w-4', ['text-gold', 'text-ink-300', 'text-amber-600'][i])} /> : i + 1;
 }
 
 function PlayerCell({ p }) {
