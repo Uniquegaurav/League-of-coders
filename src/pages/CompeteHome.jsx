@@ -16,7 +16,7 @@ import MatchCard, { ProblemMix, StatusPill } from '../components/match/MatchCard
 import JoinByCode from '../components/match/JoinByCode';
 import ScoringRules from '../components/match/ScoringRules';
 import { FriendsPanel } from '../components/social/FriendBits';
-import { Avatar, EmptyState, InfoTip, Spinner } from '../components/ui';
+import { Avatar, DifficultyBadge, EmptyState, InfoTip, Spinner } from '../components/ui';
 
 function LinkLeetCodeBanner({ linked }) {
   return (
@@ -216,6 +216,27 @@ function QuickPlay({ user, lobbies }) {
     <button className="btn-primary shrink-0" onClick={go} disabled={busy}>
       {busy ? <Spinner className="h-4 w-4" /> : <Zap className="h-4 w-4" />} Quick join
     </button>
+  );
+}
+
+function DailyProblemCard({ daily }) {
+  if (!daily?.problem) return null;
+  const p = daily.problem;
+  return (
+    <section className="panel p-5">
+      <h2 className="section-title mb-3">Problem of the day</h2>
+      <Link to={`/problems/${p.slug}`} className="block font-medium text-ink-100 hover:text-white">
+        {p.frontendId && <span className="text-ink-500">{p.frontendId}. </span>}
+        {p.title}
+      </Link>
+      <div className="mt-2 flex items-center gap-2">
+        <DifficultyBadge difficulty={p.difficulty} />
+        <span className="truncate text-xs text-ink-500">{p.tags?.slice(0, 2).join(' · ')}</span>
+      </div>
+      <Link to="/practice" className="mt-3 inline-flex items-center gap-1 text-sm text-brand-400 hover:underline">
+        Open in Practice <ArrowRight className="h-3.5 w-3.5" />
+      </Link>
+    </section>
   );
 }
 
@@ -462,6 +483,8 @@ export default function CompeteHome() {
 
   const open = usePolling(() => api.matches.open().then((r) => r.matches), 8000);
   const recent = usePolling(() => api.matches.recent(5).then((r) => r.matches), 60000);
+  // Signed-out visitors have no stats card, so the sidebar leads with today's problem instead.
+  const daily = usePolling(() => (user ? Promise.resolve(null) : api.problems.daily().catch(() => null)), 300000, [user?.id]);
   const mine = usePolling(() => (user ? api.matches.mine().then((r) => r.matches) : Promise.resolve([])), 15000, [user?.id]);
   const events = usePolling(() => api.events.list().then((r) => r.upcoming).catch(() => []), 60000);
   const nextEvent = events.data?.[0];
@@ -485,15 +508,6 @@ export default function CompeteHome() {
           <p className="mt-5 max-w-lg text-lg text-ink-200">
             Open a lobby, send the invite link, and race the same LeetCode problems. Scores come from accepted submissions.
           </p>
-          {user && (
-            <p className="mt-4 text-sm text-ink-300">
-              You are <span className={tierFor(user.stats.rating).color}>{tierFor(user.stats.rating).name}</span>
-              <span className="font-mono text-ink-200"> {user.stats.rating}</span>
-              <span className="text-ink-500">
-                {' '}· Level {user.practice?.level ?? 1} · {user.stats.wins} win{user.stats.wins === 1 ? '' : 's'} in {user.stats.matches} battle{user.stats.matches === 1 ? '' : 's'}
-              </span>
-            </p>
-          )}
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link {...authed(user, '/new?mode=battle')} className="btn-primary glow-pulse px-6 py-3 text-base">
               <Swords className="h-5 w-5" /> Start a battle
@@ -543,7 +557,7 @@ export default function CompeteHome() {
         </div>
 
         <aside className="space-y-5">
-          {user && <StatsCard user={user} />}
+          {user ? <StatsCard user={user} /> : <DailyProblemCard daily={daily.data} />}
           <TopThisWeek />
           <RecentResults matches={recent.data} />
           <FriendsPanel lobbyCode={myLobby?.code} />
@@ -557,10 +571,12 @@ export default function CompeteHome() {
       <section id="how-it-works" className="scroll-mt-24 pt-4">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="min-w-0">
-            <h2 className="section-title mb-6 text-2xl">How it works</h2>
-            <HowItWorks />
+            <h2 className="section-title text-2xl">How it works</h2>
+            <div className="mx-auto mt-12 max-w-2xl">
+              <HowItWorks />
+            </div>
           </div>
-          <div className="lg:pt-14">
+          <div className="lg:pt-20">
             <div className="panel p-5">
               <h2 className="section-title mb-4">How scoring works</h2>
               <ScoringRules compact />
