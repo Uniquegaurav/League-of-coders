@@ -10,11 +10,25 @@ export default function AuthPage() {
   const { user, login, register, googleLogin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [mode, setMode] = useState('login');
+  const from = location.state?.from || '/';
+  // Arriving from an invite or challenge link usually means a new player, so open on sign-up.
+  const invited = /^\/(m|c)\//.test(from);
+  const [mode, setMode] = useState(invited ? 'register' : 'login');
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [busy, setBusy] = useState(false);
   const signedInHere = useRef(false);
-  const from = location.state?.from || '/';
+  // Google's button has a fixed pixel width, so size it to the card (it accepts 200-400px).
+  const googleBox = useRef(null);
+  const [googleWidth, setGoogleWidth] = useState(320);
+  useEffect(() => {
+    const el = googleBox.current;
+    if (!el) return undefined;
+    const fit = () => setGoogleWidth(Math.max(200, Math.min(400, Math.floor(el.clientWidth))));
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     document.title = 'Sign in · League of Coders';
@@ -24,9 +38,10 @@ export default function AuthPage() {
 
   const done = (me) => {
     signedInHere.current = true;
-    toast.success(`Welcome${mode === 'register' ? '' : ' back'}, ${me.name.split(' ')[0]}!`);
-    // New players need a LeetCode link before they can battle.
-    navigate(me.leetcode?.verified ? from : '/u/me', { replace: true, state: me.leetcode?.verified ? undefined : { from } });
+    toast.success(`Welcome${me.created ? '' : ' back'}, ${me.name.split(' ')[0]}!`);
+    // Send everyone back to where they were (the battle they were invited to, the challenge, the home page).
+    // LeetCode linking is asked for only when they press Join, so new players see the product first.
+    navigate(from, { replace: true });
   };
 
   const submit = async (e) => {
@@ -60,14 +75,16 @@ export default function AuthPage() {
           <Swords className="h-6 w-6 text-white" />
         </span>
         <h1 className="mt-4 font-display text-3xl font-bold text-white lg:mt-0">{mode === 'login' ? 'Welcome back' : 'Create your account'}</h1>
-        <p className="mt-1 text-ink-400">{mode === 'login' ? 'Sign in to continue.' : 'Join in a few seconds.'}</p>
+        <p className="mt-1 text-ink-400">
+          {invited ? 'Sign in to accept the invite. It takes a few seconds.' : mode === 'login' ? 'Sign in to continue.' : 'Join in a few seconds.'}
+        </p>
 
-        <div className="mt-8 flex justify-start">
+        <div ref={googleBox} className="mt-8 flex w-full justify-start overflow-hidden">
           <GoogleLogin
             theme="filled_blue"
             size="large"
             shape="pill"
-            width="320"
+            width={String(googleWidth)}
             text="continue_with"
             logo_alignment="left"
             onSuccess={async ({ credential }) => {

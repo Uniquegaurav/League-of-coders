@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { ArrowRight, Flame, Megaphone, RefreshCw, Swords, Trophy } from 'lucide-react';
+import { ArrowRight, Flame, Megaphone, RefreshCw, Swords, Target, Trophy } from 'lucide-react';
 import { api } from '../../lib/api';
+import { track } from '../../lib/analytics';
+import { directUrl, imageUrl, shareUrl } from '../../lib/share';
+import { useAuth } from '../../context/AuthContext';
+import ShareButtons from '../share/ShareButtons';
 import { elapsedLabel, leetcodeUrl, ordinal } from '../../lib/format';
 import { Avatar, DifficultyBadge, Spinner, VerifiedBadge } from '../ui';
 import ChatPanel from './ChatPanel';
@@ -25,11 +29,90 @@ function RatingDelta({ p }) {
   );
 }
 
+function shareText(match, me, rated) {
+  const place = me.rank || 1;
+  if (!rated) return `I scored ${me.score} points in a ${match.settings.durationMin}-minute coding test on League of Coders. Can you beat it?`;
+  if (place === 1) return `I won "${match.name}" on League of Coders with ${me.score} points. Think you can beat me?`;
+  return `I finished ${ordinal(place)} of ${match.participants.length} in a live coding battle on League of Coders.`;
+}
+
+// Your result as a shareable card, plus a way to turn this problem set into an async "beat my score" challenge.
+function ShareResult({ match, me, user, rated }) {
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [imgOk, setImgOk] = useState(true);
+  const img = imageUrl.result(match.code, me.id) + `?v=${me.ratingAfter ?? ''}`;
+
+  const makeChallenge = async () => {
+    setBusy(true);
+    try {
+      const { challenge } = await api.challenges.create(match.code);
+      track('challenge_created', { source: rated ? 'battle' : 'solo' });
+      navigate(`/c/${challenge.code}`);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="card grid gap-5 p-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:items-center">
+      {imgOk ? (
+        <img src={img} alt="Your result card" className="aspect-[1200/630] w-full rounded-xl border border-ink-800 bg-ink-950 object-cover" onError={() => setImgOk(false)} />
+      ) : (
+        <div className="flex aspect-[1200/630] w-full items-center justify-center rounded-xl border border-ink-800 bg-ink-950 text-sm text-ink-500">Preview unavailable</div>
+      )}
+      <div className="min-w-0 space-y-4">
+        <div>
+          <p className="section-title">Share your result</p>
+          <p className="mt-1 text-sm text-ink-400">Friends who open your link see this card and can sign up to play you.</p>
+        </div>
+        <ShareButtons
+          kind="result"
+          url={shareUrl.result(match.code, me.id, user)}
+          copyUrl={directUrl.result(match.code, user)}
+          text={shareText(match, me, rated)}
+          image={img}
+          imageName={`league-of-coders-${match.code}.png`}
+        />
+        {match.challengeCode ? (
+          <Link to={`/c/${match.challengeCode}`} className="btn-primary btn-sm">
+            <Target className="h-3.5 w-3.5" /> Back to the challenge
+          </Link>
+        ) : (
+          <div className="border-t border-ink-800 pt-4">
+            <button className="btn-primary btn-sm" disabled={busy} onClick={makeChallenge}>
+              {busy ? <Spinner className="h-3.5 w-3.5" /> : <Target className="h-3.5 w-3.5" />} Challenge friends to beat this
+            </button>
+            <p className="mt-1.5 text-xs text-ink-500">Same problems and clock. They can play any time, no need to be online together.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Results({ match, messages, me, user }) {
   const navigate = useNavigate();
+  const { refresh } = useAuth();
   const [busy, setBusy] = useState(null);
   const ranked = match.participants;
   const rated = ranked.length >= 2;
+  const tracked = useRef(null);
+
+  // Ratings, XP and badges are written just after the match ends; pull them in so the navbar and badge toasts update.
+  useEffect(() => {
+    if (!me) return undefined;
+    if (tracked.current !== match.code) {
+      tracked.current = match.code;
+      track('match_finished', { players: ranked.length, rated, place: me.rank, solved: me.solves.length, event: match.event?.kind, challenge: !!match.challengeCode });
+    }
+    refresh();
+    const later = setTimeout(refresh, 3000);
+    return () => clearTimeout(later);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [match.code, me?.ratingAfter]);
   const podium = PODIUM.map((slot) => ({ ...slot, player: ranked[slot.place - 1] })).filter((s) => s.player);
 
   const rematch = async () => {
@@ -91,7 +174,7 @@ export default function Results({ match, messages, me, user }) {
         <div className="flex flex-wrap gap-2">
           {user && (
             <button className="btn-secondary" disabled={!!busy} onClick={shareResult}>
-              {busy === 'share' ? <Spinner className="h-4 w-4" /> : <Megaphone className="h-4 w-4" />} Share result
+              {busy === 'share' ? <Spinner className="h-4 w-4" /> : <Megaphone className="h-4 w-4" />} Post to community
             </button>
           )}
           {me && (
@@ -106,6 +189,20 @@ export default function Results({ match, messages, me, user }) {
         </div>
       </div>
 
+      {me && <ShareResult match={match} me={me} user={user} rated={rated} />}
+
+      {!me && ranked[0] && (
+        <div className="card flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center">
+          <div>
+            <p className="font-semibold text-white">Think you could beat {ranked[0].name.split(' ')[0]}?</p>
+            <p className="text-sm text-ink-400">Open a lobby, send the link, and race the same LeetCode problems.</p>
+          </div>
+          <Link to={user ? '/new?mode=battle' : '/login'} state={user ? undefined : { from: '/new?mode=battle' }} className="btn-primary shrink-0">
+            <Swords className="h-4 w-4" /> {user ? 'Start a battle' : 'Sign up free'}
+          </Link>
+        </div>
+      )}
+
       {match.rematchCode && !me && (
         <Link to={`/m/${match.rematchCode}`} className="card flex items-center justify-between p-4 text-sm text-ink-200 hover:border-brand-500/50">
           A rematch lobby is open <ArrowRight className="h-4 w-4" />
@@ -113,7 +210,7 @@ export default function Results({ match, messages, me, user }) {
       )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {/* Podium */}
           <div className="card flex items-end justify-center gap-2 px-3 pb-0 pt-8 sm:gap-4 sm:px-6">
             {podium.map(({ place, height, ring, text, player }) => (
@@ -192,7 +289,7 @@ export default function Results({ match, messages, me, user }) {
           {/* Problems */}
           <div className="card p-5">
             <p className="section-title mb-3">Problems in this battle</p>
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {match.problems.map((p, i) => (
                 <div key={p.slug} className="flex items-center gap-3 rounded-xl border border-ink-800 p-3">
                   <span className="font-mono text-sm font-bold text-brand-400">{letter(i)}</span>

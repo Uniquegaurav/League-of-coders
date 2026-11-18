@@ -8,14 +8,19 @@ export default function usePolling(fetcher, intervalMs = 0, deps = []) {
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
 
+  const latest = useRef(0); // only the newest request may update state (tabs can switch mid-request)
+
   const load = useCallback(async () => {
+    const id = ++latest.current;
     try {
-      setData(await fetcherRef.current());
+      const next = await fetcherRef.current();
+      if (id !== latest.current) return;
+      setData(next);
       setError(null);
     } catch (err) {
-      setError(err);
+      if (id === latest.current) setError(err);
     } finally {
-      setLoading(false);
+      if (id === latest.current) setLoading(false);
     }
   }, []);
 

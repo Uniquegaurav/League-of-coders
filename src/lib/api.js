@@ -34,11 +34,13 @@ export const api = {
   auth: {
     login: (body) => http.post('/auth/login', body),
     register: (body) => http.post('/auth/register', body),
-    google: (credential) => http.post('/auth/google', { credential }),
+    google: (credential, ref) => http.post('/auth/google', { credential, ref }),
     me: () => http.get('/auth/me'),
   },
   users: {
     get: (id) => http.get(`/users/${id}`),
+    challenge: (handle) => http.post(`/users/${handle}/challenge`),
+    colleges: (q) => http.get('/users/colleges', { params: q ? { q } : {} }),
     updateMe: (body) => http.patch('/users/me', body),
     linkLeetCode: (username) => http.put('/users/me/leetcode', { username }),
     verifyLeetCode: () => http.post('/users/me/leetcode/verify'),
@@ -46,7 +48,7 @@ export const api = {
     cancelLeetCodeClaim: () => http.delete('/users/me/leetcode/claim'),
     solved: () => http.get('/users/me/solved'),
     setSolved: (slug, solved) => http.put(`/users/me/solved/${slug}`, { solved }),
-    leaderboard: (limit = 50) => http.get('/users/leaderboard', { params: { limit } }),
+    leaderboard: (limit = 50, params = {}) => http.get('/users/leaderboard', { params: { limit, ...params } }),
     progress: () => http.get('/users/me/progress'),
   },
   friends: {
@@ -84,6 +86,25 @@ export const api = {
     check: (code) => http.post(`/matches/${code}/check`),
     chat: (code, text) => http.post(`/matches/${code}/messages`, { text }),
     rematch: (code) => http.post(`/matches/${code}/rematch`),
+  },
+  challenges: {
+    create: (matchCode) => http.post('/challenges', { matchCode }),
+    get: (code) => http.get(`/challenges/${code}`),
+    attempt: (code) => http.post(`/challenges/${code}/attempt`),
+  },
+  events: {
+    list: () => http.get('/events'),
+  },
+  activity: () => http.get('/activity'),
+  lists: {
+    all: () => http.get('/lists'),
+    get: (key) => http.get(`/lists/${key}`),
+    create: (name, slug) => http.post('/lists', { name, slug }),
+    rename: (key, name) => http.patch(`/lists/${key}`, { name }),
+    remove: (key) => http.delete(`/lists/${key}`),
+    add: (key, slug) => http.put(`/lists/${key}/problems/${slug}`),
+    drop: (key, slug) => http.delete(`/lists/${key}/problems/${slug}`),
+    containing: (slug) => http.get(`/lists/mine/containing/${slug}`),
   },
   posts: {
     list: (params) => http.get('/posts', { params }),

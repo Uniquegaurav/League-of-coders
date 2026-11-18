@@ -13,6 +13,15 @@ export default function ProblemPage() {
     if (problem) document.title = `${problem.title} · League of Coders`;
   }, [problem]);
 
+  // Problem statements are LeetCode's content. Keep them out of search results (duplicate content, and not ours to rank).
+  useEffect(() => {
+    const meta = document.createElement('meta');
+    meta.name = 'robots';
+    meta.content = 'noindex, follow';
+    document.head.appendChild(meta);
+    return () => meta.remove();
+  }, []);
+
   return (
     <div className="space-y-4">
       <Link to="/practice" className="inline-flex items-center gap-1 text-sm text-ink-400 hover:text-white">

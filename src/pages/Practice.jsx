@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { Check, ChevronLeft, ChevronRight, Search, Swords } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, ExternalLink, ListPlus, Pencil, Plus, Search, Swords, Trash2 } from 'lucide-react';
 import { api } from '../lib/api';
+import { invalidate, load, peek } from '../lib/cache';
+import { track } from '../lib/analytics';
 import { useAuth } from '../context/AuthContext';
 import { streakOf } from '../lib/progression';
 import { DifficultyBadge, EmptyState, PageBanner, ProgressBar, Spinner } from '../components/ui';
@@ -138,9 +140,99 @@ function SolvedCheckbox({ checked, disabled, busy, onClick, title }) {
   );
 }
 
-function ProblemRow({ problem, done, canTrack, busy, onToggle }) {
+// "Add to list" menu: tick the lists that should contain this problem, or start a new one.
+function AddToList({ slug, lists, onChanged }) {
+  const [open, setOpen] = useState(false);
+  const [keys, setKeys] = useState(null);
+  const [name, setName] = useState('');
+  const [busy, setBusy] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    api.lists
+      .containing(slug)
+      .then((r) => setKeys(new Set(r.keys)))
+      .catch(() => setKeys(new Set()));
+    const close = (e) => !ref.current?.contains(e.target) && setOpen(false);
+    const esc = (e) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [open, slug]);
+
+  const toggle = async (key) => {
+    const has = keys.has(key);
+    setKeys((k) => {
+      const next = new Set(k);
+      if (has) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+    try {
+      await (has ? api.lists.drop(key, slug) : api.lists.add(key, slug));
+      onChanged(key);
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const create = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setBusy(true);
+    try {
+      const { list } = await api.lists.create(name.trim(), slug);
+      track('list_created');
+      setKeys((k) => new Set(k).add(list.key));
+      setName('');
+      onChanged(list.key);
+      toast.success(`Added to ${list.name}`);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <li className={clsx('flex items-center gap-4 px-4 py-3 transition-colors', done ? 'bg-easy/[0.04]' : 'hover:bg-ink-850/60')}>
+    <div className="relative" ref={ref}>
+      <button type="button" className="btn-ghost p-1.5" aria-label="Add to a list" title="Add to a list" onClick={() => setOpen((o) => !o)}>
+        <ListPlus className="h-4 w-4" />
+      </button>
+      {open && (
+        <div className="card absolute right-0 top-9 z-30 w-64 space-y-1 p-2 shadow-2xl">
+          <p className="px-2 pb-1 pt-1 text-xs font-semibold uppercase tracking-wider text-ink-500">Add to list</p>
+          {keys === null ? (
+            <div className="flex justify-center py-3">
+              <Spinner className="h-4 w-4 text-ink-500" />
+            </div>
+          ) : (
+            lists.map((l) => (
+              <label key={l.key} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-ink-200 hover:bg-ink-800">
+                <input type="checkbox" className="accent-brand-500" checked={keys.has(l.key)} onChange={() => toggle(l.key)} />
+                <span className="truncate">{l.name}</span>
+              </label>
+            ))
+          )}
+          <form onSubmit={create} className="flex gap-1.5 border-t border-ink-800 pt-2">
+            <input className="input py-1.5 text-xs" placeholder="New list name" maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
+            <button className="btn-primary btn-sm shrink-0" disabled={busy || !name.trim()} aria-label="Create list">
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProblemRow({ problem, done, canTrack, busy, onToggle, lists, onListChanged }) {
+  return (
+    <li className={clsx('flex items-center gap-3 px-4 py-3 transition-colors sm:gap-4', done ? 'bg-easy/[0.04]' : 'hover:bg-ink-850/60')}>
       <SolvedCheckbox
         checked={done}
         busy={busy}
@@ -153,46 +245,198 @@ function ProblemRow({ problem, done, canTrack, busy, onToggle }) {
           {problem.title}
           {done && <span className="ml-2 text-xs font-semibold text-easy">Solved</span>}
         </p>
-        <p className="mt-0.5 truncate text-xs text-ink-500">{problem.tags.slice(0, 4).join(' · ')}</p>
+        <p className="mt-0.5 truncate text-xs text-ink-500">{(problem.tags || []).slice(0, 4).join(' · ')}</p>
       </Link>
       {problem.acRate != null && <span className="hidden font-mono text-xs text-ink-500 sm:block">{problem.acRate.toFixed(1)}%</span>}
       <DifficultyBadge difficulty={problem.difficulty} className="w-16 justify-center" />
+      {canTrack && lists && <AddToList slug={problem.slug} lists={lists} onChanged={onListChanged} />}
     </li>
   );
 }
 
+function SkeletonRows({ n = 8 }) {
+  return (
+    <ul className="divide-y divide-ink-800/70" aria-hidden="true">
+      {Array.from({ length: n }).map((_, i) => (
+        <li key={i} className="flex items-center gap-4 px-4 py-3.5">
+          <span className="h-5 w-5 rounded-md bg-ink-800" />
+          <span className="flex-1 space-y-2">
+            <span className="block h-3 w-2/3 animate-pulse rounded bg-ink-800" />
+            <span className="block h-2.5 w-1/3 animate-pulse rounded bg-ink-800/70" />
+          </span>
+          <span className="h-5 w-16 rounded-full bg-ink-800" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const BUILT_IN = [
+  { key: 'curated', name: 'Interview classics', description: 'The hand-picked set battles draw from.' },
+  { key: 'all', name: 'All LeetCode', description: 'Every free LeetCode problem.' },
+];
+
+// Horizontal row of list chips: built-in pools, well-known lists, then your own lists.
+function ListBar({ active, curated, mine, user, onPick, onCreate }) {
+  const [creating, setCreating] = useState(false);
+  const [name, setName] = useState('');
+  const chip = (l) => (
+    <button
+      key={l.key}
+      onClick={() => onPick(l.key)}
+      className={clsx(
+        'shrink-0 rounded-full border px-3.5 py-1.5 text-sm transition-colors',
+        active === l.key ? 'border-brand-500 bg-brand-500/15 text-white' : 'border-ink-700 text-ink-300 hover:border-ink-500 hover:text-white'
+      )}
+    >
+      {l.name}
+      {l.count != null && (
+        <span className="ml-1.5 font-mono text-xs text-ink-500">
+          {l.solved != null ? `${l.solved}/` : ''}
+          {l.count}
+        </span>
+      )}
+    </button>
+  );
+  return (
+    <div className="space-y-3">
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
+        {BUILT_IN.map(chip)}
+        {curated.map(chip)}
+      </div>
+      {user && (
+        <div className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1">
+          <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-ink-500">My lists</span>
+          {mine.map(chip)}
+          {creating ? (
+            <form
+              className="flex shrink-0 gap-1.5"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (await onCreate(name.trim())) {
+                  setName('');
+                  setCreating(false);
+                }
+              }}
+            >
+              <input className="input w-44 py-1.5 text-sm" autoFocus maxLength={60} placeholder="List name" value={name} onChange={(e) => setName(e.target.value)} onBlur={() => !name && setCreating(false)} />
+              <button className="btn-primary btn-sm" disabled={!name.trim()}>
+                Create
+              </button>
+            </form>
+          ) : (
+            <button className="btn-ghost btn-sm shrink-0" onClick={() => setCreating(true)}>
+              <Plus className="h-3.5 w-3.5" /> New list
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ListHeader({ list, onRename, onDelete }) {
+  if (!list) return null;
+  const pct = list.count && list.solved != null ? Math.round((list.solved / list.count) * 100) : null;
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-800 px-4 py-3">
+      <div className="min-w-0">
+        <p className="flex items-center gap-2 font-semibold text-white">
+          {list.name}
+          {list.sourceUrl && (
+            <a href={list.sourceUrl} target="_blank" rel="noreferrer" className="text-ink-500 hover:text-white" title="Original list">
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          )}
+        </p>
+        {list.description && <p className="text-xs text-ink-400">{list.description}</p>}
+        {list.custom && !list.count && <p className="text-xs text-ink-400">Empty for now. Use the list button on any problem to add it here.</p>}
+      </div>
+      <div className="flex items-center gap-3">
+        {pct != null && (
+          <div className="w-40">
+            <p className="mb-1 flex justify-between text-xs text-ink-400">
+              <span>Solved</span>
+              <span className="font-mono">
+                {list.solved}/{list.count}
+              </span>
+            </p>
+            <ProgressBar value={list.solved} max={list.count} barClassName="bg-easy" />
+          </div>
+        )}
+        {list.custom && (
+          <>
+            <button className="btn-ghost p-1.5" title="Rename list" onClick={onRename}>
+              <Pencil className="h-4 w-4" />
+            </button>
+            <button className="btn-ghost p-1.5 text-ink-400 hover:text-hard" title="Delete list" onClick={onDelete}>
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Practice() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, refresh } = useAuth();
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({ pool: 'curated', difficulty: '', topic: '', search: '' });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const listKey = searchParams.get('list') || 'curated';
+  const [filters, setFilters] = useState({ difficulty: '', topic: '', search: '' });
   const [tab, setTab] = useState('todo');
   const [page, setPage] = useState(1);
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [topics, setTopics] = useState([]);
   const [debounced, setDebounced] = useState('');
   const [solved, setSolved] = useState(() => new Set());
   const [busy, setBusy] = useState(() => new Set());
-  const [counts, setCounts] = useState(null);
-  const [countsTick, setCountsTick] = useState(0);
-  const [daily, setDaily] = useState(null);
+  const userKey = user?.id || 'anon';
+  const [lists, setLists] = useState(() => peek(`lists:${userKey}`) || { curated: [], mine: [] });
+  const [topics, setTopics] = useState([]);
+  const [daily, setDaily] = useState(() => peek(`daily:${userKey}`));
   const [progress, setProgress] = useState(null);
+  const [result, setResult] = useState(null); // { key, data }
+  const [loadingKey, setLoadingKey] = useState(null);
+  const progressTimer = useRef(null);
 
-  // Signed-out visitors have no solved list, so they always browse everything.
   const view = user ? tab : 'all';
+  const pool = listKey === 'all' ? 'all' : 'curated';
+  const isPool = listKey === 'curated' || listKey === 'all';
+  const activeList = isPool ? null : [...lists.curated, ...lists.mine].find((l) => l.key === listKey) || null;
 
   useEffect(() => {
     document.title = 'Practice · League of Coders';
   }, []);
 
   useEffect(() => {
-    const id = setTimeout(() => setDebounced(filters.search), 300);
+    const id = setTimeout(() => setDebounced(filters.search), 250);
     return () => clearTimeout(id);
   }, [filters.search]);
 
+  const reloadLists = useCallback(() => {
+    invalidate(`lists:${userKey}`);
+    return load(`lists:${userKey}`, () => api.lists.all())
+      .then(setLists)
+      .catch(() => {});
+  }, [userKey]);
+
   useEffect(() => {
-    api.problems.topics(filters.pool).then((r) => setTopics(r.topics)).catch(() => {});
-  }, [filters.pool]);
+    setLists(peek(`lists:${userKey}`) || { curated: [], mine: [] });
+    load(`lists:${userKey}`, () => api.lists.all())
+      .then(setLists)
+      .catch(() => {});
+  }, [userKey]);
+
+  // Back/forward between lists starts each list on its first page.
+  useEffect(() => {
+    setPage(1);
+  }, [listKey]);
+
+  useEffect(() => {
+    load(`topics:${pool}`, () => api.problems.topics(pool).then((r) => r.topics), { ttl: 10 * 60000 })
+      .then(setTopics)
+      .catch(() => {});
+  }, [pool]);
 
   useEffect(() => {
     if (!user) {
@@ -206,63 +450,62 @@ export default function Practice() {
   }, [user?.id]);
 
   useEffect(() => {
-    api.problems.daily().then(setDaily).catch(() => setDaily(null));
-  }, [user?.id, countsTick]);
+    load(`daily:${userKey}`, () => api.problems.daily(), { ttl: 5 * 60000 })
+      .then(setDaily)
+      .catch(() => setDaily(null));
+  }, [user?.id]);
 
+  const loadProgress = useCallback(() => {
+    if (!user) return setProgress(null);
+    return api.users.progress().then(setProgress).catch(() => setProgress(null));
+  }, [user]);
   useEffect(() => {
-    if (!user) {
-      setProgress(null);
-      return;
-    }
-    api.users.progress().then(setProgress).catch(() => setProgress(null));
-  }, [user?.id, countsTick]);
+    loadProgress();
+  }, [loadProgress]);
 
   const query = {
-    pool: filters.pool,
+    ...(isPool ? { pool } : { list: listKey }),
     difficulty: filters.difficulty || undefined,
     topic: filters.topic || undefined,
     search: debounced || undefined,
   };
-  const queryKey = JSON.stringify(query);
+  const extraFor = (v) => (v === 'todo' ? { hideSolved: true } : v === 'solved' ? { onlySolved: true } : {});
+  const keyFor = (p) => `problems:${user?.id || 'anon'}:${JSON.stringify(query)}:${view}:${p}`;
+  const key = keyFor(page);
+  const fetchPage = (p) => () => api.problems.list({ ...query, ...extraFor(view), page: p, limit: LIMIT });
 
-  // The list only refetches on filter, tab or page changes, so a row you just ticked stays where it is.
+  // Show the cached page at once, then refresh it quietly. The next page is fetched ahead of time.
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    const extra = view === 'todo' ? { hideSolved: true } : view === 'solved' ? { onlySolved: true } : {};
-    api.problems
-      .list({ ...query, ...extra, page, limit: LIMIT })
-      .then((r) => !cancelled && setData(r))
+    const cached = peek(key);
+    if (cached) setResult({ key, data: cached });
+    setLoadingKey(key);
+    load(key, fetchPage(page), { ttl: 30000 })
+      .then((data) => {
+        if (cancelled) return;
+        setResult({ key, data });
+        if (data.total > page * LIMIT) load(keyFor(page + 1), fetchPage(page + 1), { ttl: 30000 }).catch(() => {});
+      })
       .catch((err) => !cancelled && toast.error(err.message))
-      .finally(() => !cancelled && setLoading(false));
+      .finally(() => !cancelled && setLoadingKey(null));
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryKey, view, page, user?.id]);
+  }, [key]);
 
-  // Tab counts, refreshed after every tick without touching the visible list.
-  useEffect(() => {
-    if (!user) {
-      setCounts(null);
-      return undefined;
-    }
-    let cancelled = false;
-    Promise.all([
-      api.problems.list({ ...query, hideSolved: true, limit: 1 }),
-      api.problems.list({ ...query, onlySolved: true, limit: 1 }),
-      api.problems.list({ ...query, limit: 1 }),
-    ])
-      .then(([todo, done, all]) => !cancelled && setCounts({ todo: todo.total, solved: done.total, all: all.total }))
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryKey, user?.id, countsTick]);
+  const data = result?.data;
+  const counts = data?.counts || null;
+  const loading = loadingKey === key;
+  const stale = result && result.key !== key;
 
   const update = (patch) => {
     setFilters((f) => ({ ...f, ...patch }));
+    setPage(1);
+  };
+  const pickList = (k) => {
+    setSearchParams(k === 'curated' ? {} : { list: k });
+    setFilters((f) => ({ ...f, topic: '' }));
     setPage(1);
   };
 
@@ -272,6 +515,21 @@ export default function Practice() {
       description: 'Your progress is saved to your account.',
       action: { label: 'Sign in', onClick: () => navigate('/login', { state: { from: '/practice' } }) },
     });
+
+  // Adjust the visible counts locally instead of refetching, and refresh the slower panels a moment later.
+  const bumpCounts = (next) => {
+    setResult((r) =>
+      r?.data?.counts
+        ? { ...r, data: { ...r.data, counts: { ...r.data.counts, solved: r.data.counts.solved + (next ? 1 : -1), todo: r.data.counts.todo + (next ? -1 : 1) } } }
+        : r
+    );
+    invalidate('problems:');
+    clearTimeout(progressTimer.current);
+    progressTimer.current = setTimeout(() => {
+      loadProgress();
+      reloadLists();
+    }, 1500);
+  };
 
   const setMark = async (slug, next, { quiet = false } = {}) => {
     if (!user) return askToSignIn();
@@ -285,7 +543,10 @@ export default function Practice() {
     try {
       const res = await api.users.setSolved(slug, next);
       if (res?.practice) setUser((u) => (u ? { ...u, practice: res.practice, solvedCount: Math.max(0, (u.solvedCount || 0) + (next ? 1 : -1)) } : u));
-      setCountsTick((n) => n + 1);
+      if (res?.badges?.length) refresh();
+      if (next) track('problem_marked_solved', { daily: !!res?.daily, list: listKey });
+      if (res?.daily) setDaily((d) => (d ? { ...d, done: true } : d));
+      bumpCounts(next);
       if (!quiet) {
         toast.success(next ? 'Marked as solved' : 'Marked as not solved', {
           action: { label: 'Undo', onClick: () => setMark(slug, !next, { quiet: true }) },
@@ -308,6 +569,46 @@ export default function Practice() {
     }
   };
 
+  const createList = async (name) => {
+    try {
+      const { list } = await api.lists.create(name);
+      track('list_created');
+      await reloadLists();
+      pickList(list.key);
+      return true;
+    } catch (err) {
+      toast.error(err.message);
+      return false;
+    }
+  };
+
+  const renameList = async () => {
+    const name = window.prompt('Rename list', activeList?.name || '');
+    if (!name?.trim()) return;
+    try {
+      await api.lists.rename(listKey, name.trim());
+      reloadLists();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const deleteList = async () => {
+    if (!window.confirm(`Delete "${activeList?.name}"? The problems stay in the bank.`)) return;
+    try {
+      await api.lists.remove(listKey);
+      pickList('curated');
+      reloadLists();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const onListChanged = (changedKey) => {
+    reloadLists();
+    if (changedKey === listKey) invalidate('problems:');
+  };
+
   const toggle = (slug) => setMark(slug, !solved.has(slug));
   const pages = data ? Math.max(1, Math.ceil(data.total / LIMIT)) : 1;
 
@@ -317,7 +618,8 @@ export default function Practice() {
         title="Practice"
         info={
           <>
-            These are the same problems battles draw from. Tick a problem once LeetCode accepts it. When you host a battle you can choose to skip problems you have already solved.
+            These are the same problems battles draw from. Tick a problem once LeetCode accepts it. Lists like Blind 75 and NeetCode 150 are refreshed from
+            their public sources every week. Make your own lists with the list button on any problem.
           </>
         }
         actions={
@@ -331,24 +633,13 @@ export default function Practice() {
 
       <DailyProblem daily={daily} done={daily?.done || (daily?.problem && solved.has(daily.problem.slug))} onMark={(slug) => setMark(slug, true)} />
 
-      {user && <ProgressPanel progress={progress} user={user} activeTopic={filters.topic} onTopic={(topic) => update({ topic, pool: 'curated' })} />}
+      {user && <ProgressPanel progress={progress} user={user} activeTopic={filters.topic} onTopic={(topic) => { pickList('curated'); update({ topic }); }} />}
+
+      <ListBar active={listKey} curated={lists.curated} mine={lists.mine} user={user} onPick={pickList} onCreate={createList} />
 
       <section className="card overflow-hidden">
+        <ListHeader list={activeList} onRename={renameList} onDelete={deleteList} />
         <div className="flex flex-wrap items-center gap-3 border-b border-ink-800 p-4">
-          <div className="inline-flex rounded-xl border border-ink-700 bg-ink-950/60 p-1">
-            {[
-              ['curated', 'Interview classics'],
-              ['all', 'All LeetCode'],
-            ].map(([value, label]) => (
-              <button
-                key={value}
-                onClick={() => update({ pool: value, topic: '' })}
-                className={clsx('rounded-lg px-3 py-1.5 text-sm font-medium', filters.pool === value ? 'bg-ink-700 text-white' : 'text-ink-400 hover:text-white')}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
           <div className="relative min-w-[200px] flex-1">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-500" />
             <input className="input pl-10" placeholder="Search by title or number" value={filters.search} onChange={(e) => update({ search: e.target.value })} />
@@ -370,22 +661,22 @@ export default function Practice() {
         <div className="flex items-center justify-between gap-3 border-b border-ink-800 px-4">
           {user ? (
             <div className="flex gap-1" role="tablist">
-              {TABS.map(([key, label]) => (
+              {TABS.map(([k, label]) => (
                 <button
-                  key={key}
+                  key={k}
                   role="tab"
-                  aria-selected={tab === key}
+                  aria-selected={tab === k}
                   onClick={() => {
-                    setTab(key);
+                    setTab(k);
                     setPage(1);
                   }}
                   className={clsx(
                     '-mb-px border-b-2 px-3 py-3 text-sm font-medium transition-colors',
-                    tab === key ? 'border-brand-500 text-white' : 'border-transparent text-ink-400 hover:text-ink-200'
+                    tab === k ? 'border-brand-500 text-white' : 'border-transparent text-ink-400 hover:text-ink-200'
                   )}
                 >
                   {label}
-                  {counts && <span className={clsx('ml-2 font-mono text-xs', key === 'solved' ? 'text-easy' : 'text-ink-500')}>{counts[key]}</span>}
+                  {counts && <span className={clsx('ml-2 font-mono text-xs', k === 'solved' ? 'text-easy' : 'text-ink-500')}>{counts[k]}</span>}
                 </button>
               ))}
             </div>
@@ -395,14 +686,21 @@ export default function Practice() {
           {loading && data && <Spinner className="h-4 w-4 text-ink-500" />}
         </div>
 
-        {loading && !data ? (
-          <div className="flex justify-center py-16">
-            <Spinner className="h-6 w-6 text-ink-500" />
-          </div>
-        ) : data?.problems.length ? (
-          <ul className={clsx('divide-y divide-ink-800/70', loading && 'opacity-60')}>
+        {!data ? (
+          <SkeletonRows />
+        ) : data.problems.length ? (
+          <ul className={clsx('divide-y divide-ink-800/70 transition-opacity duration-150', stale && 'opacity-50')}>
             {data.problems.map((p) => (
-              <ProblemRow key={p.slug} problem={p} done={solved.has(p.slug)} busy={busy.has(p.slug)} canTrack={!!user} onToggle={toggle} />
+              <ProblemRow
+                key={p.slug}
+                problem={p}
+                done={solved.has(p.slug)}
+                busy={busy.has(p.slug)}
+                canTrack={!!user}
+                onToggle={toggle}
+                lists={lists.mine}
+                onListChanged={onListChanged}
+              />
             ))}
           </ul>
         ) : (

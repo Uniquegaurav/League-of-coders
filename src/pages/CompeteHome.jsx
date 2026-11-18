@@ -1,8 +1,12 @@
-import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
-import { ArrowRight, Clock, Link2, Swords, Timer, Trophy, UserPlus } from 'lucide-react';
+import { toast } from 'sonner';
+import { ArrowRight, Clock, Link2, Swords, Timer, Trophy, UserPlus, Zap } from 'lucide-react';
 import { api } from '../lib/api';
+import { track } from '../lib/analytics';
+import EventCard from '../components/match/EventCard';
+import ActivityStrip from '../components/home/ActivityStrip';
 import { tierFor } from '../lib/rank';
 import { streakOf } from '../lib/progression';
 import { timeAgo } from '../lib/format';
@@ -43,6 +47,49 @@ const STEPS = [
   { icon: Trophy, title: 'Climb the ranks', body: 'Live scoreboard, first-solve bonuses, and Elo after every rated battle.' },
 ];
 
+function StepCard({ step, n }) {
+  const { icon: Icon, title, body } = step;
+  return (
+    <div className="card card-hover relative z-10 h-full p-5">
+      <div className="flex items-center gap-3">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400">
+          <Icon className="h-5 w-5" />
+        </span>
+        <span className="font-mono text-xs text-ink-500">0{n}</span>
+      </div>
+      <p className="mt-3 font-semibold text-white">{title}</p>
+      <p className="mt-1 text-sm text-ink-400">{body}</p>
+    </div>
+  );
+}
+
+// The four steps sit on a ring around the illustration, read clockwise: 1 top, 2 right, 3 bottom, 4 left.
+// On a 3x3 grid with equal tracks, the ring's edges pass exactly through the middle of each card.
+function HowItWorks() {
+  const [s1, s2, s3, s4] = STEPS;
+  return (
+    <div className="relative grid gap-4 md:grid-cols-3 md:grid-rows-3 md:gap-x-5 md:gap-y-4">
+      <div aria-hidden className="pointer-events-none absolute inset-[16.6%] hidden rounded-[50%] border-2 border-dashed border-brand-500/25 md:block" />
+      <div className="order-1 flex items-center justify-center md:col-start-2 md:row-start-2">
+        <span aria-hidden className="absolute h-40 w-40 rounded-full bg-brand-500/15 blur-3xl" />
+        <img src={heroCoder} alt="" className="hero-art relative w-40 md:w-[85%] md:max-w-[220px]" />
+      </div>
+      <div className="order-2 md:col-start-2 md:row-start-1">
+        <StepCard step={s1} n={1} />
+      </div>
+      <div className="order-3 md:col-start-3 md:row-start-2">
+        <StepCard step={s2} n={2} />
+      </div>
+      <div className="order-4 md:col-start-2 md:row-start-3">
+        <StepCard step={s3} n={3} />
+      </div>
+      <div className="order-5 md:col-start-1 md:row-start-2">
+        <StepCard step={s4} n={4} />
+      </div>
+    </div>
+  );
+}
+
 const authed = (user, to) => (user ? { to } : { to: '/login', state: { from: to } });
 
 function StatsCard({ user }) {
@@ -54,7 +101,7 @@ function StatsCard({ user }) {
       <div className="flex items-center gap-3">
         <Avatar name={user.name} src={user.avatar} size={44} />
         <div className="min-w-0">
-          <Link to={`/u/${user.id}`} className="block truncate font-semibold text-white hover:underline">
+          <Link to={`/u/${user.username || user.id}`} className="block truncate font-semibold text-white hover:underline">
             {user.name}
           </Link>
           <p className="text-sm">
@@ -113,7 +160,7 @@ function TopPlayers({ players }) {
     <div className="card p-5">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="section-title">Top players</h2>
-        <Link to="/leaderboard" className="text-sm text-brand-400 hover:underline">
+        <Link to="/league" className="text-sm text-brand-400 hover:underline">
           Full leaderboard
         </Link>
       </div>
@@ -123,7 +170,7 @@ function TopPlayers({ players }) {
             const tier = tierFor(p.stats.rating);
             return (
               <li key={p.id}>
-                <Link to={`/u/${p.id}`} className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-ink-800">
+                <Link to={`/u/${p.username || p.id}`} className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-ink-800">
                   <span className="w-5 text-center font-mono text-sm text-ink-400">{i + 1}</span>
                   <Avatar name={p.name} src={p.avatar} size={28} />
                   <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-200">
@@ -155,7 +202,7 @@ function FriendActivity({ user }) {
         {feed.data.slice(0, 5).map((a, i) => (
           <li key={`${a.match.code}-${a.user.id}-${i}`} className="text-sm">
             <p className="text-ink-300">
-              <Link to={`/u/${a.user.id}`} className="font-medium text-white hover:underline">
+              <Link to={`/u/${a.user.username || a.user.id}`} className="font-medium text-white hover:underline">
                 {a.user.name}
               </Link>{' '}
               {a.result.rank === 1 && a.result.of > 1 ? 'won' : `placed ${a.result.rank} of ${a.result.of} in`}{' '}
@@ -181,6 +228,69 @@ function FriendActivity({ user }) {
   );
 }
 
+// Both play cards use the same button so the two rows line up.
+const PLAY_CTA = 'btn-secondary w-full justify-between sm:w-48';
+
+// Drops the player into the fullest open public lobby (scheduled events first), or opens a new one.
+function QuickPlay({ user, lobbies }) {
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const go = async () => {
+    const candidates = (lobbies || [])
+      .filter((m) => !m.settings.solo && m.players < m.maxPlayers)
+      .sort((a, b) => Number(!!b.event) - Number(!!a.event) || b.players - a.players);
+    const pick = candidates[0];
+    track('quick_play', { found: !!pick, event: pick?.event?.kind || null });
+    if (!pick) {
+      navigate(user ? '/new?mode=battle' : '/login', { state: user ? undefined : { from: '/new?mode=battle' } });
+      return;
+    }
+    if (!user || !user.leetcode?.verified) {
+      navigate(`/m/${pick.code}`);
+      return;
+    }
+    setBusy(true);
+    try {
+      await api.matches.join(pick.code);
+      track('match_joined', { via: 'quick_play', event: pick.event?.kind || null });
+      navigate(`/m/${pick.code}`);
+    } catch (err) {
+      toast.error(err.message);
+      navigate(`/m/${pick.code}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <button className={PLAY_CTA} onClick={go} disabled={busy}>
+      Find a battle {busy ? <Spinner className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+    </button>
+  );
+}
+
+// One full-width row per way to play (same layout the solo test card always had).
+function PlayCard({ icon: Icon, tone, title, info, body, action }) {
+  return (
+    <section className="card card-hover">
+      <div className="flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
+        <div className="flex gap-4">
+          <span className={clsx('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', tone)}>
+            <Icon className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="flex items-center gap-2 font-semibold text-white">
+              {title}
+              <InfoTip label={`About ${title.toLowerCase()}`}>{info}</InfoTip>
+            </h2>
+            <p className="mt-1 max-w-xl text-sm text-ink-300">{body}</p>
+          </div>
+        </div>
+        <div className="shrink-0">{action}</div>
+      </div>
+    </section>
+  );
+}
+
 export default function CompeteHome() {
   const { user } = useAuth();
   useEffect(() => {
@@ -192,6 +302,8 @@ export default function CompeteHome() {
   const top = usePolling(() => api.users.leaderboard(5).then((r) => r.players), 60000);
   const daily = usePolling(() => api.problems.daily().catch(() => null), 300000, [user?.id]);
   const mine = usePolling(() => (user ? api.matches.mine().then((r) => r.matches) : Promise.resolve([])), 15000, [user?.id]);
+  const events = usePolling(() => api.events.list().then((r) => r.upcoming).catch(() => []), 60000);
+  const nextEvent = events.data?.[0];
 
   const mineCodes = new Set((mine.data || []).map((m) => m.code));
   const others = (open.data || []).filter((m) => !mineCodes.has(m.code));
@@ -231,6 +343,7 @@ export default function CompeteHome() {
 
       {user && !user.leetcode?.verified && <LinkLeetCodeBanner linked={!!user.leetcode} />}
 
+
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-10">
           {mine.data?.length > 0 && (
@@ -244,27 +357,28 @@ export default function CompeteHome() {
             </section>
           )}
 
-          <section className="card">
-            <div className="flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
-            <div className="flex gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-hard/15 text-hard">
-                <Clock className="h-5 w-5" />
-              </span>
-              <div>
-                <h2 className="flex items-center gap-2 font-semibold text-white">
-                  Solo timed test
-                  <InfoTip label="About solo tests">
-                    Choose how many easy, medium and hard problems you want. Each adds time to the clock: 10 minutes for easy, 20 for medium and 35 for hard. Solo tests are private and never change your rating.
-                  </InfoTip>
-                </h2>
-                <p className="mt-1 max-w-xl text-sm text-ink-300">Test yourself against the clock, at your own pace.</p>
-              </div>
-            </div>
-            <Link {...authed(user, '/new?mode=solo')} className="btn-secondary shrink-0">
-              Start a solo test <ArrowRight className="h-4 w-4" />
-            </Link>
-            </div>
-          </section>
+          <div className="space-y-4">
+            <PlayCard
+              icon={Clock}
+              tone="bg-hard/15 text-hard"
+              title="Solo timed test"
+              info="Choose how many easy, medium and hard problems you want. Each adds time to the clock: 10 minutes for easy, 20 for medium and 35 for hard. Solo tests are private and never change your rating."
+              body="Test yourself against the clock, at your own pace."
+              action={
+                <Link {...authed(user, '/new?mode=solo')} className={PLAY_CTA}>
+                  Start a solo test <ArrowRight className="h-4 w-4" />
+                </Link>
+              }
+            />
+            <PlayCard
+              icon={Zap}
+              tone="bg-neon-500/15 text-neon-400"
+              title="Quick play"
+              info="Puts you in the fullest open public lobby, with the battle hour and tournaments first. If no lobby is open, it starts a new battle for you to share."
+              body="Jump straight into an open public battle."
+              action={<QuickPlay user={user} lobbies={open.data} />}
+            />
+          </div>
 
           <section className="overflow-hidden rounded-2xl border border-ink-700">
             <div className="flex items-center justify-between border-b border-ink-700 bg-ink-900 px-5 py-3">
@@ -295,22 +409,33 @@ export default function CompeteHome() {
                   icon={UserPlus}
                   title="No open lobbies right now"
                   action={
-                    <Link {...authed(user, '/new?mode=battle')} className="btn-primary btn-sm">
-                      Host the first one
-                    </Link>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <Link {...authed(user, '/new?mode=battle')} className="btn-primary btn-sm">
+                        Host one
+                      </Link>
+                      <Link to="/league" className="btn-secondary btn-sm">
+                        See the schedule
+                      </Link>
+                    </div>
                   }
                 >
-                  Create a public lobby and it shows up here. Private rooms stay off this list. Share the invite link instead.
+                  {nextEvent
+                    ? `Next public battle: ${nextEvent.name}, ${new Date(nextEvent.startsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}. The lobby opens 30 minutes before.`
+                    : 'Create a public lobby and it shows up here. Private rooms stay off this list. Share the invite link instead.'}
                 </EmptyState>
               )
             )}
           </section>
 
-          {live.length > 0 && (
+
+          {/* New: next scheduled event, live battles and the latest solves, below the existing sections. */}
+          <ActivityStrip lead={nextEvent && <EventCard event={nextEvent} />} />
+
+          {recent.data?.length > 0 && (
             <section>
-              <h2 className="section-title mb-4">Live now</h2>
+              <h2 className="section-title mb-4">Recent results</h2>
               <div className="grid gap-4 sm:grid-cols-2">
-                {live.map((m) => (
+                {recent.data.map((m) => (
                   <MatchCard key={m.code} match={m} />
                 ))}
               </div>
@@ -318,39 +443,8 @@ export default function CompeteHome() {
           )}
 
           <section>
-            <h2 className="section-title mb-4">Recent results</h2>
-            {recent.data?.length ? (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {recent.data.map((m) => (
-                  <MatchCard key={m.code} match={m} />
-                ))}
-              </div>
-            ) : (
-              <EmptyState icon={Trophy} title="No finished battles yet">
-                Results of public battles will appear here.
-              </EmptyState>
-            )}
-          </section>
-
-          <section>
             <h2 className="section-title mb-4">How it works</h2>
-            <div className="grid items-center gap-6 md:grid-cols-[minmax(0,1fr)_220px]">
-              <div className="grid gap-4 sm:grid-cols-2">
-                {STEPS.map(({ icon: Icon, title, body }, i) => (
-                  <div key={title} className="card p-5">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400">
-                        <Icon className="h-5 w-5" />
-                      </span>
-                      <span className="font-mono text-xs text-ink-500">0{i + 1}</span>
-                    </div>
-                    <p className="mt-4 font-semibold text-white">{title}</p>
-                    <p className="mt-1 text-sm text-ink-400">{body}</p>
-                  </div>
-                ))}
-              </div>
-              <img src={heroCoder} alt="" className="hero-art mx-auto hidden w-full max-w-[220px] md:block" />
-            </div>
+            <HowItWorks />
           </section>
 
           <section className="card p-6">

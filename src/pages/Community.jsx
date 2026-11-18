@@ -100,7 +100,7 @@ function Comments({ post, onChange }) {
           <Avatar name={c.author.name} src={c.author.avatar} size={28} />
           <div className="min-w-0 flex-1 rounded-2xl rounded-tl-sm bg-ink-800/70 px-3 py-2">
             <p className="text-xs">
-              <Link to={`/u/${c.author.id}`} className="font-semibold text-ink-200 hover:underline">
+              <Link to={`/u/${c.author.username || c.author.id}`} className="font-semibold text-ink-200 hover:underline">
                 {c.author.name}
               </Link>
               <span className="text-ink-500"> · {timeAgo(c.createdAt)}</span>
@@ -166,7 +166,7 @@ function PostCard({ post, onChange, onDelete, onTag }) {
         <Avatar name={post.author.name} src={post.author.avatar} size={40} />
         <div className="min-w-0 flex-1">
           <p className="text-sm">
-            <Link to={`/u/${post.author.id}`} className="font-semibold text-white hover:underline">
+            <Link to={`/u/${post.author.username || post.author.id}`} className="font-semibold text-white hover:underline">
               {post.author.name}
             </Link>
             <span className="text-ink-500"> · {timeAgo(post.createdAt)}</span>

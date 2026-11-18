@@ -11,7 +11,7 @@ import { Avatar } from './ui';
 const LINKS = [
   { to: '/', label: 'Compete', end: true },
   { to: '/practice', label: 'Practice' },
-  { to: '/leaderboard', label: 'Leaderboard' },
+  { to: '/league', label: 'League' },
   { to: '/community', label: 'Community' },
 ];
 
@@ -117,7 +117,7 @@ function UserMenu({ user, onSignOut }) {
             <p className="truncate text-sm font-semibold text-white">{user.name}</p>
             <p className="truncate text-xs text-ink-400">{user.email}</p>
           </div>
-          <Link to={`/u/${user.id}`} onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink-200 hover:bg-ink-800">
+          <Link to={`/u/${user.username || user.id}`} onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink-200 hover:bg-ink-800">
             <UserIcon className="h-4 w-4" /> Profile & LeetCode
           </Link>
           <Link to="/community?tab=friends" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink-200 hover:bg-ink-800">
