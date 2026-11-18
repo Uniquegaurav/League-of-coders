@@ -8,7 +8,6 @@ import { timeAgo } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
 import { useSocial } from '../context/SocialContext';
 import { Avatar, EmptyState, PageBanner, PageLoader, Spinner } from '../components/ui';
-import fiber from '../assets/bg/fiber.jpg';
 import FriendsHub from '../components/social/FriendsHub';
 import { FriendsPanel } from '../components/social/FriendBits';
 
@@ -343,7 +342,6 @@ export default function Community() {
   return (
     <div className="space-y-6">
       <PageBanner
-        image={fiber}
         title="Community"
         actions={
           <div className="inline-flex rounded-xl border border-ink-700 bg-ink-950/60 p-1">

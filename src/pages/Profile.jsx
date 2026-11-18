@@ -8,7 +8,6 @@ import { tierFor } from '../lib/rank';
 import { timeAgo, ordinal } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
 import { Avatar, EmptyState, PageLoader, ProgressBar, Spinner, VerifiedBadge } from '../components/ui';
-import portal from '../assets/bg/portal.jpg';
 import { ProblemMix } from '../components/match/MatchCard';
 import { FriendButton } from '../components/social/FriendBits';
 import { milestonesFor, streakOf } from '../lib/progression';
@@ -348,53 +347,48 @@ export default function Profile() {
 
   return (
     <div className="space-y-6">
-      <div className={clsx('grid grid-cols-1 items-start gap-6', isMe && 'lg:grid-cols-[minmax(0,1fr)_380px]')}>
-        <section className="card overflow-hidden">
-          <div className="relative h-32 sm:h-36">
-            <img src={portal} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover object-[center_40%]" />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/30 to-transparent" />
-          </div>
-          <div className="px-6 pb-6">
-            <div className="-mt-10 flex flex-wrap items-end justify-between gap-4">
-              <span className="rounded-full ring-4 ring-ink-900">
-                <Avatar name={player.name} src={player.avatar} size={84} />
-              </span>
+      <div className={clsx('grid grid-cols-1 items-end gap-6', isMe && 'lg:grid-cols-[minmax(0,1fr)_380px]')}>
+        <section className="min-w-0 pt-6 sm:pt-14">
+          <div className="flex flex-wrap items-end gap-5">
+            <span className="rounded-full ring-4 ring-ink-950/70 shadow-2xl">
+              <Avatar name={player.name} src={player.avatar} size={104} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className={clsx('text-xs font-semibold uppercase tracking-[0.2em]', tier.color)}>{tier.name}</p>
+              <h1 className="mt-1 flex items-center gap-2 font-display text-4xl font-bold tracking-tight text-white drop-shadow sm:text-5xl">
+                {player.name} <VerifiedBadge verified={player.leetcode?.verified} />
+              </h1>
+              <p className="mt-2 text-sm text-ink-300">
+                {player.leetcode ? (
+                  <a href={`https://leetcode.com/u/${player.leetcode.username}/`} target="_blank" rel="noreferrer" className="hover:text-white hover:underline">
+                    @{player.leetcode.username}
+                  </a>
+                ) : (
+                  'No LeetCode linked'
+                )}
+                <span className="text-ink-500"> · </span>joined {timeAgo(player.createdAt)}
+                {streak > 0 && (
+                  <>
+                    <span className="text-ink-500"> · </span>
+                    {streak}-day practice streak
+                  </>
+                )}
+              </p>
+            </div>
+            <div className="flex items-end gap-4">
               <FriendButton playerId={player.id} />
-            </div>
-            <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-              <div className="min-w-0">
-                <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-white sm:text-3xl">
-                  {player.name} <VerifiedBadge verified={player.leetcode?.verified} />
-                </h1>
-                <p className="mt-1 text-sm text-ink-400">
-                  {player.leetcode ? (
-                    <a href={`https://leetcode.com/u/${player.leetcode.username}/`} target="_blank" rel="noreferrer" className="hover:text-ink-200 hover:underline">
-                      @{player.leetcode.username}
-                    </a>
-                  ) : (
-                    'No LeetCode linked'
-                  )}
-                  <span className="text-ink-600"> · </span>joined {timeAgo(player.createdAt)}
-                  {streak > 0 && (
-                    <>
-                      <span className="text-ink-600"> · </span>
-                      {streak}-day practice streak
-                    </>
-                  )}
-                </p>
-              </div>
               <div className="text-right">
-                <p className={clsx('text-xs font-semibold uppercase tracking-wider', tier.color)}>{tier.name}</p>
-                <p className="font-mono text-3xl font-bold text-white">{s.rating}</p>
+                <p className="text-xs uppercase tracking-wider text-ink-400">Rating</p>
+                <p className="font-mono text-4xl font-bold text-white drop-shadow">{s.rating}</p>
               </div>
             </div>
-            <div className="mt-6 grid grid-cols-2 divide-ink-800 rounded-xl border border-ink-800 bg-ink-950/40 sm:grid-cols-5 sm:divide-x">
-              <Stat label="Battles" value={s.matches} />
-              <Stat label="Wins" value={s.wins} />
-              <Stat label="Win rate" value={`${winRate}%`} />
-              <Stat label="Solved in battles" value={s.solved} />
-              <Stat label="Points" value={s.points.toLocaleString()} />
-            </div>
+          </div>
+          <div className="card mt-8 grid grid-cols-2 divide-ink-800 sm:grid-cols-5 sm:divide-x">
+            <Stat label="Battles" value={s.matches} />
+            <Stat label="Wins" value={s.wins} />
+            <Stat label="Win rate" value={`${winRate}%`} />
+            <Stat label="Solved in battles" value={s.solved} />
+            <Stat label="Points" value={s.points.toLocaleString()} />
           </div>
         </section>
         {isMe && <AccountCard />}

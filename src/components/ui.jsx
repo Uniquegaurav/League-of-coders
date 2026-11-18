@@ -173,24 +173,18 @@ export function InfoTip({ children, label = 'More info', className, align = 'lef
   );
 }
 
-// Page header on top of a background image. The image sits behind a dark gradient so text stays readable.
-export function PageBanner({ image, title, children, info, actions, position = 'center', flip = false, className }) {
+// Page heading that sits directly on the page backdrop (see Backdrop.jsx).
+export function PageBanner({ title, children, info, actions, className }) {
   return (
-    <section className={clsx('relative rounded-2xl border border-ink-700 bg-ink-900', className)}>
-      <div aria-hidden className="absolute inset-0 overflow-hidden rounded-[inherit]">
-        <img src={image} alt="" className={clsx('h-full w-full object-cover', flip && '-scale-x-100')} style={{ objectPosition: position }} />
-        <div className="absolute inset-0 bg-gradient-to-r from-ink-950/90 via-ink-950/60 to-ink-950/10" />
+    <section className={clsx('flex flex-wrap items-end justify-between gap-4 pb-2 pt-6 sm:pt-12', className)}>
+      <div className="min-w-0">
+        <h1 className="flex items-center gap-2 font-display text-4xl font-bold tracking-tight text-white drop-shadow sm:text-5xl">
+          {title}
+          {info && <InfoTip label={`About ${typeof title === 'string' ? title : 'this page'}`}>{info}</InfoTip>}
+        </h1>
+        {children && <p className="mt-2 max-w-xl text-lg text-ink-200">{children}</p>}
       </div>
-      <div className="relative flex flex-wrap items-end justify-between gap-4 px-6 py-8 sm:px-8 sm:py-10">
-        <div className="min-w-0">
-          <h1 className="flex items-center gap-2 font-display text-3xl font-bold text-white">
-            {title}
-            {info && <InfoTip label={`About ${typeof title === 'string' ? title : 'this page'}`}>{info}</InfoTip>}
-          </h1>
-          {children && <p className="mt-1.5 max-w-xl text-ink-300">{children}</p>}
-        </div>
-        {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
-      </div>
+      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
     </section>
   );
 }
