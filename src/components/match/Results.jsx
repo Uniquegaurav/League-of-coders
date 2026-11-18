@@ -29,9 +29,9 @@ function RatingDelta({ p }) {
   );
 }
 
-function shareText(match, me, rated) {
+function shareText(match, me, multiplayer) {
   const place = me.rank || 1;
-  if (!rated) return `I scored ${me.score} points in a ${match.settings.durationMin}-minute coding test on League of Coders. Can you beat it?`;
+  if (!multiplayer) return `I scored ${me.score} points in a ${match.settings.durationMin}-minute coding test on League of Coders. Can you beat it?`;
   if (place === 1) return `I won "${match.name}" on League of Coders with ${me.score} points. Think you can beat me?`;
   return `I finished ${ordinal(place)} of ${match.participants.length} in a live coding battle on League of Coders.`;
 }
@@ -98,7 +98,9 @@ export default function Results({ match, messages, me, user }) {
   const { refresh } = useAuth();
   const [busy, setBusy] = useState(null);
   const ranked = match.participants;
-  const rated = ranked.length >= 2;
+  const multiplayer = ranked.length >= 2;
+  // Only official tournaments move rating. Older finished matches without the flag were rated with 2+ players.
+  const rated = match.rated ?? multiplayer;
   const tracked = useRef(null);
 
   // Ratings, XP and badges are written just after the match ends; pull them in so the navbar and badge toasts update.
@@ -168,6 +170,12 @@ export default function Results({ match, messages, me, user }) {
                   · rating {me.ratingBefore} → <span className="font-semibold text-white">{me.ratingAfter}</span>
                 </>
               )}
+              {me.xp > 0 && (
+                <>
+                  {' '}
+                  · <span className="font-semibold text-neon-400">+{me.xp} XP</span>
+                </>
+              )}
             </p>
           )}
         </div>
@@ -189,7 +197,7 @@ export default function Results({ match, messages, me, user }) {
         </div>
       </div>
 
-      {me && <ShareResult match={match} me={me} user={user} rated={rated} />}
+      {me && <ShareResult match={match} me={me} user={user} rated={multiplayer} />}
 
       {!me && ranked[0] && (
         <div className="card flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center">
@@ -239,7 +247,7 @@ export default function Results({ match, messages, me, user }) {
                     </th>
                   ))}
                   <th className="px-4 py-3 text-right">Score</th>
-                  {rated && <th className="px-4 py-3 text-right">Rating</th>}
+                  {rated ? <th className="px-4 py-3 text-right">Rating</th> : <th className="px-4 py-3 text-right">XP</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink-800/70">
@@ -274,10 +282,12 @@ export default function Results({ match, messages, me, user }) {
                         );
                       })}
                       <td className="px-4 py-3 text-right font-mono font-bold text-white">{p.score}</td>
-                      {rated && (
+                      {rated ? (
                         <td className="px-4 py-3 text-right">
                           <RatingDelta p={p} />
                         </td>
+                      ) : (
+                        <td className="px-4 py-3 text-right font-mono text-sm text-neon-400">{p.xp ? `+${p.xp}` : <span className="text-ink-600">·</span>}</td>
                       )}
                     </tr>
                   );

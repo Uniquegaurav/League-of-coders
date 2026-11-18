@@ -24,8 +24,8 @@ export default function ScoringRules({ compact }) {
       ))}
       {!compact && (
         <p className="text-xs text-ink-500 sm:col-span-2">
-          Ties are broken by problems solved, then by who finished their last solve first. Rated matches (2+ players) update
-          everyone's Elo rating.
+          Ties are broken by problems solved, then by who finished their last solve first. Tournaments (battle hour, Sunday Cup and
+          planned events) move your rating. Every battle and solo test earns XP for each verified solve, plus a placement bonus.
         </p>
       )}
     </div>

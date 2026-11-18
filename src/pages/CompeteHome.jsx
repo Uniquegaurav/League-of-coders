@@ -2,23 +2,21 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { ArrowDown, ArrowRight, Link2, Swords, Timer, Trophy, UserPlus } from 'lucide-react';
+import { ArrowDown, ArrowRight, Link2, Plus, Swords, Timer, TrendingUp, UserPlus, Zap } from 'lucide-react';
 import { api } from '../lib/api';
 import { track } from '../lib/analytics';
-import { EventArt, QuickArt, SoloArt } from '../components/home/ModeArt';
-import { useNow } from '../components/match/EventCard';
-import { clock } from '../lib/format';
+import { SoloArt } from '../components/home/ModeArt';
 import { tierFor } from '../lib/rank';
 import { streakOf } from '../lib/progression';
 import { timeAgo } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
 import heroCoder from '../assets/hero-coder.png';
 import usePolling from '../hooks/usePolling';
-import MatchCard, { ProblemMix } from '../components/match/MatchCard';
+import MatchCard from '../components/match/MatchCard';
 import JoinByCode from '../components/match/JoinByCode';
 import ScoringRules from '../components/match/ScoringRules';
 import { FriendsPanel } from '../components/social/FriendBits';
-import { Avatar, DifficultyBadge, EmptyState, InfoTip, Spinner, VerifiedBadge } from '../components/ui';
+import { Avatar, EmptyState, InfoTip, Spinner } from '../components/ui';
 
 function LinkLeetCodeBanner({ linked }) {
   return (
@@ -45,7 +43,7 @@ const STEPS = [
   { icon: Link2, title: 'Link LeetCode', body: 'Connect your username once. Solves are read from your accepted submissions.' },
   { icon: Swords, title: 'Create or join', body: 'Pick the difficulty mix, topics, and duration, then share the invite link.' },
   { icon: Timer, title: 'Race the clock', body: 'Everyone gets the same shuffled set. Read it here, submit on LeetCode.' },
-  { icon: Trophy, title: 'Climb the ranks', body: 'Live scoreboard, first-solve bonuses, and Elo after every rated battle.' },
+  { icon: TrendingUp, title: 'Climb the ranks', body: 'Every battle earns XP. Tournaments move your rating.' },
 ];
 
 const SNAKE_STEP_S = 2; // seconds each card holds the light; 4 cards = 8s cycle
@@ -102,7 +100,7 @@ function StatsCard({ user }) {
   const tier = tierFor(s.rating);
   const { streak } = streakOf(user);
   return (
-    <div className="card p-5">
+    <div className="panel p-5">
       <div className="flex items-center gap-3">
         <Avatar name={user.name} src={user.avatar} size={44} />
         <div className="min-w-0">
@@ -117,82 +115,30 @@ function StatsCard({ user }) {
       </div>
       <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
         {[
-          ['Battles', s.matches],
+          ['Level', user.practice?.level ?? 1],
+          ['XP this week', (user.practice?.weekXp ?? 0).toLocaleString()],
           ['Wins', s.wins],
-          ['Win rate', `${s.matches ? Math.round((s.wins / s.matches) * 100) : 0}%`],
         ].map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-ink-800 bg-ink-950/40 py-2.5">
+          <div key={label} className="rounded-xl bg-white/[0.04] py-2.5">
             <dd className="font-display text-lg font-bold text-white">{value}</dd>
             <dt className="text-[11px] uppercase tracking-wider text-ink-500">{label}</dt>
           </div>
         ))}
       </dl>
-      {streak > 0 && (
-        <p className="mt-3 text-sm text-ink-400">
-          Practice streak: <span className="font-semibold text-ink-200">{streak} day{streak > 1 ? 's' : ''}</span>
-        </p>
-      )}
-    </div>
-  );
-}
-
-function DailyProblemCard({ daily }) {
-  if (!daily?.problem) return null;
-  const p = daily.problem;
-  return (
-    <div className="card p-5">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="section-title">Problem of the day</h2>
-        {daily.done && <span className="text-xs font-semibold text-easy">Done</span>}
-      </div>
-      <Link to={`/problems/${p.slug}`} className="block font-medium text-ink-200 hover:text-white">
-        {p.frontendId && <span className="text-ink-500">{p.frontendId}. </span>}
-        {p.title}
-      </Link>
-      <div className="mt-2 flex items-center gap-2">
-        <DifficultyBadge difficulty={p.difficulty} />
-        <span className="truncate text-xs text-ink-500">{p.tags?.slice(0, 2).join(' · ')}</span>
-      </div>
-      <Link to="/practice" className="mt-3 inline-flex items-center gap-1 text-sm text-brand-400 hover:underline">
-        Open in Practice <ArrowRight className="h-3.5 w-3.5" />
-      </Link>
-    </div>
-  );
-}
-
-function TopPlayers({ players }) {
-  return (
-    <div className="card p-5">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="section-title">Top players</h2>
-        <Link to="/league" className="text-sm text-brand-400 hover:underline">
-          Full leaderboard
+      <div className="mt-3 flex items-center justify-between text-sm">
+        <span className="text-ink-400">
+          {streak > 0 ? (
+            <>
+              Streak <span className="font-semibold text-ink-200">{streak} day{streak > 1 ? 's' : ''}</span>
+            </>
+          ) : (
+            'No streak yet'
+          )}
+        </span>
+        <Link to="/leaderboard" className="text-brand-400 hover:underline">
+          Your rank
         </Link>
       </div>
-      {players?.length ? (
-        <ol className="space-y-1">
-          {players.map((p, i) => {
-            const tier = tierFor(p.stats.rating);
-            return (
-              <li key={p.id}>
-                <Link to={`/u/${p.username || p.id}`} className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-ink-800">
-                  <span className="w-5 text-center font-mono text-sm text-ink-400">{i + 1}</span>
-                  <Avatar name={p.name} src={p.avatar} size={28} />
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-200">
-                    {p.name} <VerifiedBadge verified={p.leetcode?.verified} />
-                  </span>
-                  <span className="text-right">
-                    <span className={clsx('block text-[11px] font-semibold uppercase tracking-wider', tier.color)}>{tier.name}</span>
-                    <span className="font-mono text-sm font-bold text-brand-400">{p.stats.rating}</span>
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ol>
-      ) : (
-        <p className="text-sm text-ink-400">Play a rated battle (2+ players) to appear here.</p>
-      )}
     </div>
   );
 }
@@ -267,112 +213,198 @@ function QuickPlay({ user, lobbies }) {
     }
   };
   return (
-    <button className={PLAY_CTA} onClick={go} disabled={busy}>
-      Find a battle {busy ? <Spinner className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+    <button className="btn-primary shrink-0" onClick={go} disabled={busy}>
+      {busy ? <Spinner className="h-4 w-4" /> : <Zap className="h-4 w-4" />} Quick join
     </button>
   );
 }
 
-// One of the three ways to play. Same shape for all three: art, title, one line, one button.
-function ModeCard({ art, title, info, body, action }) {
+// A way to play, as one full-width row: art on the left, then the title and one line, then the button.
+function ModeRow({ art, title, info, body, action }) {
   return (
-    <section className="card card-hover group flex flex-col overflow-hidden">
-      {art}
-      <div className="flex flex-1 flex-col gap-4 p-5">
-        <div className="flex-1">
-          <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-white">
+    <section className="panel group flex flex-col overflow-hidden sm:flex-row sm:items-stretch">
+      <div className="sm:w-56 sm:shrink-0">{art}</div>
+      <div className="flex flex-1 flex-col justify-center gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div>
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-white">
             {title}
             <InfoTip label={`About ${title.toLowerCase()}`}>{info}</InfoTip>
-          </h3>
+          </h2>
           <p className="mt-1 text-sm text-ink-300">{body}</p>
         </div>
-        {action}
+        <div className="sm:w-52 sm:shrink-0">{action}</div>
       </div>
     </section>
   );
 }
 
-// The battle hour / next tournament, with its own countdown.
-function EventMode({ event }) {
-  const now = useNow();
-  if (!event) {
-    return (
-      <ModeCard
-        art={<EventArt />}
-        title="Battle hour"
-        info="A public battle every evening, and the Sunday Cup each week. Lobbies open 30 minutes before and start on their own with 2 or more players."
-        body="A public battle every evening."
-        action={
-          <Link to="/league" className={PLAY_CTA}>
-            See the schedule <ArrowRight className="h-4 w-4" />
-          </Link>
-        }
-      />
-    );
-  }
-  const startsIn = new Date(event.startsAt).getTime() - now;
-  const open = !!event.code && event.status === 'lobby';
-  const running = !!event.code && ['countdown', 'live'].includes(event.status);
-  const when = new Date(event.startsAt).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+const OPEN_SHOWN = 4; // on Compete; "Show all" opens the full list across the page
+
+// Battle hour first, then the fullest lobbies, then battles already running (to watch).
+export const orderBattles = (lobbies, live) => [
+  ...[...lobbies].sort((a, b) => Number(!!b.event) - Number(!!a.event) || b.players - a.players),
+  ...live,
+];
+
+// The last tile of a battle grid: start your own.
+function HostTile({ user }) {
   return (
-    <ModeCard
-      art={<EventArt />}
-      title={event.name}
-      info="Public battles on a schedule. The lobby opens 30 minutes before and starts on its own once 2 or more players join. Up to 20 players, rated like any battle."
-      body={
-        running ? (
-          'Running now. Watch the live scoreboard.'
-        ) : open ? (
-          <>
-            Starts in <span className="font-mono text-white">{clock(Math.max(0, startsIn))}</span> · {event.players} joined
-          </>
-        ) : startsIn < 24 * 3600 * 1000 ? (
-          <>
-            Starts in <span className="font-mono text-white">{clock(Math.max(0, startsIn))}</span>
-          </>
-        ) : (
-          `Next: ${when}`
-        )
-      }
-      action={
-        event.code ? (
-          <Link to={`/m/${event.code}`} className={PLAY_CTA}>
-            {running ? 'Watch live' : 'Join the lobby'} <ArrowRight className="h-4 w-4" />
-          </Link>
-        ) : (
-          <Link to="/league" className={PLAY_CTA}>
-            See the schedule <ArrowRight className="h-4 w-4" />
-          </Link>
-        )
-      }
-    />
+    <Link
+      {...authed(user, '/new?mode=battle')}
+      className="flex min-h-[10rem] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 p-5 text-center text-ink-300 transition hover:border-brand-500/60 hover:bg-white/[0.03] hover:text-white"
+    >
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500/15 text-brand-300">
+        <Plus className="h-5 w-5" />
+      </span>
+      <span className="font-semibold">Host a battle</span>
+      <span className="text-xs text-ink-500">Pick the problems, share the link</span>
+    </Link>
   );
 }
 
-// Finished public battles as compact one-line rows.
+function OpenBattles({ user, lobbies, live, loading, nextEvent, expanded, onExpand }) {
+  const list = orderBattles(lobbies, live);
+  const shown = list.slice(0, OPEN_SHOWN);
+  // Keep the 2-column grid even: an odd count gets the host tile as its partner.
+  const withHost = shown.length % 2 === 1;
+  return (
+    <section className="panel">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 sm:px-6">
+        <div>
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-white">
+            Open battles
+            <InfoTip label="About open battles">
+              Public lobbies waiting for players, and battles already running that you can watch. Quick join puts you in the fullest open lobby, with the
+              battle hour and tournaments first. If none is open, it starts a new battle for you to share. Private rooms never show here.
+            </InfoTip>
+          </h2>
+          <p className="mt-1 text-sm text-ink-300">
+            {lobbies.length} open{live.length ? ` · ${live.length} live` : ''}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {loading && <Spinner className="h-4 w-4 text-ink-500" />}
+          <Link {...authed(user, '/new?mode=battle')} className="btn-secondary">
+            <Plus className="h-4 w-4" /> Host
+          </Link>
+          <QuickPlay user={user} lobbies={lobbies} />
+        </div>
+      </div>
+      {list.length && expanded ? (
+        <p className="px-5 pb-5 pt-3 text-sm text-ink-400 sm:px-6">
+          All {list.length} battles are listed below.{' '}
+          <button className="text-brand-400 hover:underline" onClick={onExpand}>
+            Collapse
+          </button>
+        </p>
+      ) : list.length ? (
+        <div className="p-4 sm:p-5">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {shown.map((m) => (
+              <MatchCard key={m.code} match={m} />
+            ))}
+            {withHost && <HostTile user={user} />}
+          </div>
+          {list.length > OPEN_SHOWN && (
+            <button className="mt-4 text-sm text-brand-400 hover:underline" onClick={onExpand}>
+              Show all {list.length} battles
+            </button>
+          )}
+        </div>
+      ) : (
+        !loading && (
+          <EmptyState
+            icon={UserPlus}
+            title="No open battles right now"
+            action={
+              <Link {...authed(user, '/new?mode=battle')} className="btn-primary btn-sm">
+                Host one
+              </Link>
+            }
+          >
+            {nextEvent
+              ? `The next public battle is ${nextEvent.name} at ${new Date(nextEvent.startsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}. Quick join starts a new one now.`
+              : 'Quick join starts a new public battle you can share.'}
+          </EmptyState>
+        )
+      )}
+    </section>
+  );
+}
+
+// Every open battle, across the full page width, once "Show all" is pressed.
+function AllBattles({ user, lobbies, live, onClose }) {
+  const list = orderBattles(lobbies, live);
+  return (
+    <section id="all-battles" className="panel scroll-mt-24 p-5 sm:p-6">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="font-display text-lg font-semibold text-white">All open battles · {list.length}</h2>
+        <button className="text-sm text-brand-400 hover:underline" onClick={onClose}>
+          Hide
+        </button>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {list.map((m) => (
+          <MatchCard key={m.code} match={m} />
+        ))}
+        <HostTile user={user} />
+      </div>
+    </section>
+  );
+}
+
+// Top 5 by XP this week (what Compete earns), falling back to all time early in the week.
+function TopThisWeek() {
+  const { data } = usePolling(async () => {
+    const week = await api.users.leaderboard(5, { board: 'xp', period: 'week' });
+    if (week.players?.length) return { players: week.players, period: 'week' };
+    const all = await api.users.leaderboard(5, { board: 'xp', period: 'all' });
+    return { players: all.players || [], period: 'all' };
+  }, 60000);
+  if (!data?.players?.length) return null;
+  return (
+    <section className="panel p-5">
+      <div className="mb-3 flex items-baseline justify-between">
+        <h2 className="section-title">{data.period === 'week' ? 'Top this week' : 'Top players'}</h2>
+        <Link to={`/leaderboard?board=xp${data.period === 'all' ? '&period=all' : ''}`} className="text-sm text-brand-400 hover:underline">
+          Leaderboard
+        </Link>
+      </div>
+      <ol className="space-y-1">
+        {data.players.map((p, i) => (
+          <li key={p.id}>
+            <Link to={`/u/${p.username || p.id}`} className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/[0.04]">
+              <span className="w-4 text-center font-mono text-sm text-ink-500">{i + 1}</span>
+              <Avatar name={p.name} src={p.avatar} size={28} />
+              <span className="min-w-0 flex-1 truncate text-sm text-ink-100">{p.name}</span>
+              <span className="font-mono text-xs text-neon-400">{(p.value ?? p.practice?.xp ?? 0).toLocaleString()} XP</span>
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+// Finished public battles, compact, for the sidebar. The winner's avatar leads each row.
 function RecentResults({ matches }) {
   if (!matches?.length) return null;
   return (
-    <section>
-      <h2 className="section-title mb-4">Recent results</h2>
-      <ul className="card divide-y divide-ink-800/70">
+    <section className="panel p-5">
+      <h2 className="section-title mb-3">Recent results</h2>
+      <ul className="space-y-1">
         {matches.map((m) => (
           <li key={m.code}>
-            <Link to={`/m/${m.code}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-ink-850/60">
-              <Trophy className="h-4 w-4 shrink-0 text-gold" />
-              <p className="min-w-0 flex-1 truncate text-sm text-ink-300">
-                <span className="font-medium text-white">{m.winner?.name || 'No winner'}</span>
-                {m.winner && ' won '}
-                <span className="text-ink-200">{m.name}</span>
-              </p>
-              <span className="hidden shrink-0 items-center gap-3 text-xs text-ink-500 sm:flex">
-                <span className="inline-flex items-center gap-1">
-                  <UserPlus className="h-3.5 w-3.5" /> {m.players}
-                </span>
-                <ProblemMix settings={m.settings} />
-                {m.winner && <span className="font-mono text-ink-300">{m.winner.score} pts</span>}
-              </span>
-              <span className="w-24 shrink-0 text-right text-xs text-ink-500">{timeAgo(m.finishedAt)}</span>
+            <Link to={`/m/${m.code}`} className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/[0.04]">
+              <Avatar name={m.winner?.name || m.name} src={m.winner?.avatar} size={30} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm text-ink-300">
+                  <span className="font-medium text-white">{m.winner?.name || 'No winner'}</span> {m.winner ? 'won' : 'in'} {m.name}
+                </p>
+                <p className="text-xs text-ink-500">
+                  {m.players} players · {timeAgo(m.finishedAt)}
+                </p>
+              </div>
             </Link>
           </li>
         ))}
@@ -395,12 +427,11 @@ export default function CompeteHome() {
 
   const open = usePolling(() => api.matches.open().then((r) => r.matches), 8000);
   const recent = usePolling(() => api.matches.recent(5).then((r) => r.matches), 60000);
-  const top = usePolling(() => api.users.leaderboard(5).then((r) => r.players), 60000);
-  const daily = usePolling(() => api.problems.daily().catch(() => null), 300000, [user?.id]);
   const mine = usePolling(() => (user ? api.matches.mine().then((r) => r.matches) : Promise.resolve([])), 15000, [user?.id]);
   const events = usePolling(() => api.events.list().then((r) => r.upcoming).catch(() => []), 60000);
   const nextEvent = events.data?.[0];
 
+  const [allOpen, setAllOpen] = useState(false);
   const mineCodes = new Set((mine.data || []).map((m) => m.code));
   const others = (open.data || []).filter((m) => !mineCodes.has(m.code));
   const live = others.filter((m) => m.status !== 'lobby');
@@ -423,7 +454,9 @@ export default function CompeteHome() {
             <p className="mt-4 text-sm text-ink-300">
               You are <span className={tierFor(user.stats.rating).color}>{tierFor(user.stats.rating).name}</span>
               <span className="font-mono text-ink-200"> {user.stats.rating}</span>
-              <span className="text-ink-500"> · {user.stats.wins} wins in {user.stats.matches} rated battles</span>
+              <span className="text-ink-500">
+                {' '}· Level {user.practice?.level ?? 1} · {user.stats.wins} win{user.stats.wins === 1 ? '' : 's'} in {user.stats.matches} battle{user.stats.matches === 1 ? '' : 's'}
+              </span>
             </p>
           )}
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -456,100 +489,60 @@ export default function CompeteHome() {
             </section>
           )}
 
-          <section>
-            <h2 className="section-title mb-4">Choose how to play</h2>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <ModeCard
-                art={<SoloArt />}
-                title="Solo test"
-                info="Choose how many easy, medium and hard problems you want. Each adds time to the clock: 10 minutes for easy, 20 for medium and 35 for hard. Solo tests are private and never change your rating."
-                body="Race the clock at your own pace."
-                action={
-                  <Link {...authed(user, '/new?mode=solo')} className={PLAY_CTA}>
-                    Start a solo test <ArrowRight className="h-4 w-4" />
-                  </Link>
-                }
-              />
-              <ModeCard
-                art={<QuickArt />}
-                title="Quick play"
-                info="Puts you in the fullest open public lobby, with the battle hour and tournaments first. If no lobby is open, it starts a new battle for you to share."
-                body="Jump into an open public battle."
-                action={<QuickPlay user={user} lobbies={open.data} />}
-              />
-              <EventMode event={nextEvent} />
-            </div>
-          </section>
+          <ModeRow
+            art={<SoloArt />}
+            title="Solo test"
+            info="Choose how many easy, medium and hard problems you want. Each adds time to the clock: 10 minutes for easy, 20 for medium and 35 for hard. Solo tests are private, earn XP and never change your rating."
+            body="Race the clock at your own pace."
+            action={
+              <Link {...authed(user, '/new?mode=solo')} className={PLAY_CTA}>
+                Start a solo test <ArrowRight className="h-4 w-4" />
+              </Link>
+            }
+          />
 
-          <section className="overflow-hidden rounded-2xl border border-ink-700">
-            <div className="flex items-center justify-between border-b border-ink-700 bg-ink-900 px-5 py-3">
-              <div>
-                <h2 className="section-title">Open battles</h2>
-                <p className="text-sm text-ink-400">Join a lobby, or spectate a battle that is already live</p>
-              </div>
-              <div className="flex items-center gap-3 text-xs text-ink-400">
-                {live.length > 0 && (
-                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-hard">
-                    <span className="h-2 w-2 animate-pulse rounded-full bg-hard" /> {live.length} live
-                  </span>
-                )}
-                {open.loading && <Spinner className="h-4 w-4 text-ink-500" />}
-              </div>
-            </div>
-            {lobbies.length || live.length ? (
-              <div className="grid gap-4 p-4 sm:grid-cols-2">
-                {[...lobbies, ...live].map((m) => (
-                  <div key={m.code} className="room-card">
-                    <MatchCard match={m} />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              !open.loading && (
-                <EmptyState
-                  icon={UserPlus}
-                  title="No open battles right now"
-                  action={
-                    <div className="flex flex-wrap justify-center gap-2">
-                      <Link {...authed(user, '/new?mode=battle')} className="btn-primary btn-sm">
-                        Host one
-                      </Link>
-                      <Link to="/league" className="btn-secondary btn-sm">
-                        See the schedule
-                      </Link>
-                    </div>
-                  }
-                >
-                  {nextEvent
-                    ? `Next public battle: ${nextEvent.name}, ${new Date(nextEvent.startsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}. The lobby opens 30 minutes before.`
-                    : 'Create a public lobby and it shows up here. Private rooms stay off this list. Share the invite link instead.'}
-                </EmptyState>
-              )
-            )}
-          </section>
-
-
-          <RecentResults matches={recent.data} />
-
-          <section id="how-it-works" className="scroll-mt-24">
-            <h2 className="section-title mb-4">How it works</h2>
-            <HowItWorks />
-          </section>
-
-          <section className="card p-6">
-            <h2 className="section-title mb-4">How scoring works</h2>
-            <ScoringRules />
-          </section>
+          <OpenBattles
+            user={user}
+            lobbies={lobbies}
+            live={live}
+            loading={open.loading && !open.data}
+            nextEvent={nextEvent}
+            expanded={allOpen}
+            onExpand={() => {
+              setAllOpen((v) => !v);
+              // Bring the full list into view once it renders.
+              requestAnimationFrame(() => document.getElementById('all-battles')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+            }}
+          />
         </div>
 
         <aside className="space-y-5">
           {user && <StatsCard user={user} />}
-          <DailyProblemCard daily={daily.data} />
+          <TopThisWeek />
+          <RecentResults matches={recent.data} />
           <FriendsPanel lobbyCode={myLobby?.code} />
-          <TopPlayers players={top.data} />
           <FriendActivity user={user} />
         </aside>
       </div>
+
+      {allOpen && <AllBattles user={user} lobbies={lobbies} live={live} onClose={() => setAllOpen(false)} />}
+
+      {/* Reference material sits at the bottom, full width, reached from the "How it works" link in the hero. */}
+      <section id="how-it-works" className="scroll-mt-24 pt-4">
+        <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+          <div>
+            <h2 className="section-title mb-6 text-2xl">How it works</h2>
+            <HowItWorks />
+          </div>
+          <div className="panel p-6">
+            <h2 className="section-title mb-4">How scoring works</h2>
+            <ScoringRules compact />
+            <p className="mt-4 text-xs leading-5 text-ink-500">
+              Ties go to whoever solved more, then to the earlier last solve. Tournaments move your rating. Every battle and solo test earns XP.
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

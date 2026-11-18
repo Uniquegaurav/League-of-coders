@@ -464,7 +464,7 @@ function InviteCard({ user }) {
     <section className="card space-y-3 p-5">
       <h2 className="section-title flex items-center gap-2">
         Invite friends
-        <InfoTip label="About invites" align="right">
+        <InfoTip label="About invites">
           When a friend signs up through your link and finishes their first battle, you both get 100 XP. Bring 3 and you earn the Recruiter badge.
         </InfoTip>
       </h2>
@@ -591,7 +591,7 @@ export default function Profile() {
                 )}
                 {player.college && (
                   <>
-                    <Link to={`/league?tab=colleges&college=${encodeURIComponent(player.college)}`} className="inline-flex items-center gap-1 hover:text-white hover:underline">
+                    <Link to={`/leaderboard?scope=college&college=${encodeURIComponent(player.college)}`} className="inline-flex items-center gap-1 hover:text-white hover:underline">
                       <GraduationCap className="h-3.5 w-3.5" /> {player.college}
                     </Link>
                     <span className="text-ink-500"> · </span>
@@ -622,12 +622,12 @@ export default function Profile() {
               </div>
             </div>
           </div>
-          <div className="card mt-8 grid grid-cols-2 divide-ink-800 sm:grid-cols-5 sm:divide-x">
+          <div className="panel mt-8 grid grid-cols-2 divide-white/5 sm:grid-cols-5 sm:divide-x">
+            <Stat label={`Level ${player.practice?.level ?? 1}`} value={`${(player.practice?.xp ?? 0).toLocaleString()} XP`} className="text-neon-400" />
+            <Stat label="Tournaments" value={s.ratedEvents ?? 0} />
             <Stat label="Battles" value={s.matches} />
             <Stat label="Wins" value={s.wins} />
             <Stat label="Win rate" value={`${winRate}%`} />
-            <Stat label="Solved in battles" value={s.solved} />
-            <Stat label="Points" value={s.points.toLocaleString()} />
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-ink-500">{isMe ? 'Share your profile' : 'Share'}</span>

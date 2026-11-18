@@ -13,6 +13,7 @@ const NewMatch = lazy(() => import('./pages/NewMatch'));
 const MatchRoom = lazy(() => import('./pages/MatchRoom'));
 const Practice = lazy(() => import('./pages/Practice'));
 const ProblemPage = lazy(() => import('./pages/ProblemPage'));
+const Tournaments = lazy(() => import('./pages/Tournaments'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 const Community = lazy(() => import('./pages/Community'));
 const Profile = lazy(() => import('./pages/Profile'));
@@ -106,12 +107,12 @@ export default function App() {
             <Route path="/join/:code" element={<LegacyJoinRedirect />} />
             <Route path="/practice" element={<Practice />} />
             <Route path="/problems/:slug" element={<ProblemPage />} />
-            <Route path="/league" element={<Leaderboard />} />
-            <Route path="/leaderboard" element={<KeepQuery to="/league" />} />
+            <Route path="/tournaments" element={<Tournaments />} />
+            <Route path="/league" element={<KeepQuery to="/tournaments" />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/community" element={<Community />} />
             <Route path="/u/:id" element={<Profile />} />
             <Route path="/c/:code" element={<ChallengePage />} />
-            <Route path="/tournaments" element={<Navigate to="/league" replace />} />
             <Route path="/login" element={<AuthPage />} />
             <Route path="/compete" element={<Navigate to="/" replace />} />
             <Route path="/problems" element={<Navigate to="/practice" replace />} />

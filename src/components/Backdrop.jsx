@@ -15,7 +15,7 @@ const SCENES = [
   { test: (p) => p === '/', src: compete, position: 'center 30%', height: 'h-[720px] sm:h-[820px]', dim: 'light' },
   { test: (p) => p.startsWith('/login'), src: signin, position: 'center', height: 'h-full', dim: 'none' },
   { test: (p) => p.startsWith('/practice') || p.startsWith('/problems'), src: practice, position: 'center' },
-  { test: (p) => p.startsWith('/league'), src: leaderboard, position: 'left top', flip: true },
+  { test: (p) => p.startsWith('/tournaments') || p.startsWith('/leaderboard'), src: leaderboard, position: 'left top', flip: true },
   { test: (p) => p.startsWith('/community'), src: community, position: 'right center' },
   { test: (p) => p.startsWith('/u/'), src: profile, position: 'center 45%' },
   { test: (p) => p.startsWith('/new'), src: battle, position: 'right center' },
