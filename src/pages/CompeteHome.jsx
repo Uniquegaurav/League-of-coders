@@ -12,7 +12,7 @@ import { timeAgo } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
 import heroCoder from '../assets/hero-coder.png';
 import usePolling from '../hooks/usePolling';
-import MatchCard from '../components/match/MatchCard';
+import MatchCard, { ProblemMix, StatusPill } from '../components/match/MatchCard';
 import JoinByCode from '../components/match/JoinByCode';
 import ScoringRules from '../components/match/ScoringRules';
 import { FriendsPanel } from '../components/social/FriendBits';
@@ -219,6 +219,35 @@ function QuickPlay({ user, lobbies }) {
   );
 }
 
+// Battles you are in, as compact rows: one line each, whatever the count.
+function ActiveBattles({ matches }) {
+  return (
+    <section className="panel p-5 sm:p-6">
+      <h2 className="mb-3 font-display text-lg font-semibold text-white">Your active battles</h2>
+      <ul className="divide-y divide-white/5">
+        {matches.map((m) => {
+          const lobby = m.status === 'lobby';
+          return (
+            <li key={m.code} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
+              <StatusPill status={m.status} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-white">{m.name}</p>
+                <p className="flex items-center gap-2 text-xs text-ink-500">
+                  {m.settings.solo ? 'Solo test' : `${m.players}/${m.maxPlayers} players`} · {m.settings.durationMin} min · <ProblemMix settings={m.settings} />
+                </p>
+              </div>
+              <span className="hidden rounded-lg bg-white/[0.05] px-2 py-1 font-mono text-xs tracking-widest text-ink-300 sm:inline">{m.code}</span>
+              <Link to={`/m/${m.code}`} className="btn-primary btn-sm w-full justify-center sm:w-auto">
+                {lobby ? 'Return to lobby' : 'Back to the arena'} <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 // A way to play, as one full-width row: art on the left, then the title and one line, then the button.
 function ModeRow({ art, title, info, body, action }) {
   return (
@@ -279,15 +308,20 @@ function OpenBattles({ user, lobbies, live, loading, nextEvent, expanded, onExpa
             </InfoTip>
           </h2>
           <p className="mt-1 text-sm text-ink-300">
-            {lobbies.length} open{live.length ? ` · ${live.length} live` : ''}
+            {list.length ? `${lobbies.length} open${live.length ? ` · ${live.length} live` : ''}` : 'Public lobbies and live battles show up here'}
           </p>
         </div>
         <div className="flex items-center gap-2">
           {loading && <Spinner className="h-4 w-4 text-ink-500" />}
-          <Link {...authed(user, '/new?mode=battle')} className="btn-secondary">
-            <Plus className="h-4 w-4" /> Host
-          </Link>
-          <QuickPlay user={user} lobbies={lobbies} />
+          {/* With nothing open, the empty state below carries the single "Host a battle" action. */}
+          {list.length > 0 && (
+            <>
+              <Link {...authed(user, '/new?mode=battle')} className="btn-secondary">
+                <Plus className="h-4 w-4" /> Host
+              </Link>
+              <QuickPlay user={user} lobbies={lobbies} />
+            </>
+          )}
         </div>
       </div>
       {list.length && expanded ? (
@@ -314,17 +348,18 @@ function OpenBattles({ user, lobbies, live, loading, nextEvent, expanded, onExpa
       ) : (
         !loading && (
           <EmptyState
+            bare
             icon={UserPlus}
             title="No open battles right now"
             action={
-              <Link {...authed(user, '/new?mode=battle')} className="btn-primary btn-sm">
-                Host one
+              <Link {...authed(user, '/new?mode=battle')} className="btn-primary">
+                <Plus className="h-4 w-4" /> Host a battle
               </Link>
             }
           >
             {nextEvent
-              ? `The next public battle is ${nextEvent.name} at ${new Date(nextEvent.startsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}. Quick join starts a new one now.`
-              : 'Quick join starts a new public battle you can share.'}
+              ? `Host one and share the link, or join ${nextEvent.name} at ${new Date(nextEvent.startsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`
+              : 'Host one and share the link with friends.'}
           </EmptyState>
         )
       )}
@@ -478,16 +513,7 @@ export default function CompeteHome() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-10">
-          {mine.data?.length > 0 && (
-            <section>
-              <h2 className="section-title mb-4">Your active battles</h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {mine.data.map((m) => (
-                  <MatchCard key={m.code} match={m} joined />
-                ))}
-              </div>
-            </section>
-          )}
+          {mine.data?.length > 0 && <ActiveBattles matches={mine.data} />}
 
           <ModeRow
             art={<SoloArt />}
@@ -529,17 +555,19 @@ export default function CompeteHome() {
 
       {/* Reference material sits at the bottom, full width, reached from the "How it works" link in the hero. */}
       <section id="how-it-works" className="scroll-mt-24 pt-4">
-        <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
-          <div>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="min-w-0">
             <h2 className="section-title mb-6 text-2xl">How it works</h2>
             <HowItWorks />
           </div>
-          <div className="panel p-6">
-            <h2 className="section-title mb-4">How scoring works</h2>
-            <ScoringRules compact />
-            <p className="mt-4 text-xs leading-5 text-ink-500">
-              Ties go to whoever solved more, then to the earlier last solve. Tournaments move your rating. Every battle and solo test earns XP.
-            </p>
+          <div className="lg:pt-14">
+            <div className="panel p-5">
+              <h2 className="section-title mb-4">How scoring works</h2>
+              <ScoringRules compact />
+              <p className="mt-4 text-xs leading-5 text-ink-500">
+                Ties go to whoever solved more, then to the earlier last solve. Tournaments move your rating. Every battle and solo test earns XP.
+              </p>
+            </div>
           </div>
         </div>
       </section>
