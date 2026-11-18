@@ -24,7 +24,7 @@
     @apply rounded-2xl border border-ink-700/70 bg-ink-900/70 backdrop-blur-sm;
   }
   .card-hover {
-    @apply transition hover:border-brand-500/50 hover:bg-ink-850/80;
+    @apply transition duration-200 hover:-translate-y-0.5 hover:border-brand-500/50 hover:bg-ink-850/80 hover:shadow-[0_12px_32px_-14px_rgba(124,92,255,0.45)];
   }
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition
@@ -103,10 +103,33 @@
 .backdrop-in {
   animation: backdrop-in 0.9s ease-out both;
 }
+/* Press feedback on every button */
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+/* New items in the live feed slide in from the top */
+@keyframes feed-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.feed-in {
+  animation: feed-in 0.45s ease-out both;
+}
 @media (prefers-reduced-motion: reduce) {
   .backdrop-in,
-  .hero-art {
+  .hero-art,
+  .feed-in {
     animation: none;
+  }
+  .btn:active:not(:disabled),
+  .card-hover:hover {
+    transform: none;
   }
 }
 

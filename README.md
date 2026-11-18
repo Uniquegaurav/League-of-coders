@@ -37,6 +37,16 @@ Netlify (`public/_redirects`) and Vercel (`vercel.json`) rewrites are included s
 - **Practice** (`/practice`) — the same problem bank battles draw from, with filters and solved tracking.
 - **Leaderboard**, **Community** (posts, likes, comments), **Profile** (`/u/:id`, LeetCode linking and history).
 
+## Sharing, analytics and SEO
+
+- Share links use `/s/...` paths (battle, result, profile, challenge). Netlify (`public/_redirects`) and Vercel
+  (`vercel.json`) proxy `/s/*`, `/og/*` and `/sitemap.xml` to the API, which serves preview tags and images.
+  Links carry `?ref=<username>` so sign-ups credit the sharer.
+- Analytics: set `VITE_POSTHOG_KEY` to turn on PostHog. Events include `signup_completed`, `leetcode_linked`,
+  `match_created`, `match_joined`, `match_finished`, `share_clicked`, `challenge_created`, `quick_play`.
+- Static landing pages for search live in `public/<slug>/index.html` and are listed in the sitemap.
+  Problem pages are marked `noindex` because their text is LeetCode's.
+
 ## Why problems open on LeetCode
 
 LeetCode forbids embedding (`X-Frame-Options: SAMEORIGIN`) and doesn't offer a public judge. So the statement and

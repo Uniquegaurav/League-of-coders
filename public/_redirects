@@ -1,1 +1,6 @@
-/*    /index.html   200
+# Link previews, preview images and the sitemap are served by the API so they can show live data.
+# These proxy rewrites keep the links on this domain. They must come before the SPA fallback.
+/s/*            https://league-of-coders-backend.onrender.com/share/:splat   200
+/og/*           https://league-of-coders-backend.onrender.com/og/:splat      200
+/sitemap.xml    https://league-of-coders-backend.onrender.com/sitemap.xml    200
+/*              /index.html                                                   200

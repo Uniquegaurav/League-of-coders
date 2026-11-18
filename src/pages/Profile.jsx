@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { ArrowRight, Check, Copy, ExternalLink, Pencil, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Check, Copy, ExternalLink, GraduationCap, Pencil, ShieldCheck, Swords } from 'lucide-react';
 import { api } from '../lib/api';
+import { track } from '../lib/analytics';
+import { BADGES } from '../lib/badges';
+import { directUrl, imageUrl, profileHandle, shareUrl } from '../lib/share';
+import ShareButtons from '../components/share/ShareButtons';
 import { tierFor } from '../lib/rank';
 import { timeAgo, ordinal } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
-import { Avatar, EmptyState, PageLoader, ProgressBar, Spinner, VerifiedBadge } from '../components/ui';
+import { Avatar, EmptyState, InfoTip, PageLoader, ProgressBar, Spinner, Toggle, VerifiedBadge } from '../components/ui';
 import { ProblemMix } from '../components/match/MatchCard';
 import { FriendButton } from '../components/social/FriendBits';
 import { milestonesFor, streakOf } from '../lib/progression';
@@ -85,6 +89,125 @@ function DisplayName() {
   );
 }
 
+// One-line editable field (username, college). `suggest` returns name suggestions for a datalist.
+function EditableField({ id, label, value, placeholder, help, prefix, maxLength = 60, onSave, suggest }) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(value || '');
+  const [busy, setBusy] = useState(false);
+  const [options, setOptions] = useState([]);
+
+  useEffect(() => {
+    if (!editing || !suggest || text.trim().length < 2) return undefined;
+    const t = setTimeout(() => suggest(text.trim()).then(setOptions).catch(() => {}), 250);
+    return () => clearTimeout(t);
+  }, [editing, suggest, text]);
+
+  if (!editing) {
+    return (
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="label mb-0.5">{label}</p>
+          <p className={clsx('truncate text-sm', value ? 'text-white' : 'text-ink-500')}>{value ? `${prefix || ''}${value}` : placeholder}</p>
+        </div>
+        <button
+          className="btn-ghost btn-sm"
+          onClick={() => {
+            setText(value || '');
+            setEditing(true);
+          }}
+        >
+          <Pencil className="h-3.5 w-3.5" /> {value ? 'Edit' : 'Add'}
+        </button>
+      </div>
+    );
+  }
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        if (await onSave(text.trim())) setEditing(false);
+        setBusy(false);
+      }}
+    >
+      <label className="label" htmlFor={id}>
+        {label}
+      </label>
+      <div className="flex gap-2">
+        <input id={id} className="input py-2" maxLength={maxLength} value={text} onChange={(e) => setText(e.target.value)} autoFocus list={suggest ? `${id}-options` : undefined} placeholder={placeholder} />
+        {suggest && (
+          <datalist id={`${id}-options`}>
+            {options.map((o) => (
+              <option key={o} value={o} />
+            ))}
+          </datalist>
+        )}
+        <button className="btn-primary btn-sm shrink-0" disabled={busy || text.trim() === (value || '')}>
+          {busy && <Spinner className="h-3.5 w-3.5" />} Save
+        </button>
+        <button type="button" className="btn-ghost btn-sm shrink-0" onClick={() => setEditing(false)}>
+          Cancel
+        </button>
+      </div>
+      {help && <p className="mt-1.5 text-xs text-ink-500">{help}</p>}
+    </form>
+  );
+}
+
+function ProfileFields() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [, run] = useSave();
+  return (
+    <>
+      <EditableField
+        id="username"
+        label="Username"
+        prefix="@"
+        value={user.username}
+        maxLength={30}
+        help="Your profile link becomes /u/username. Letters, numbers, - and _."
+        onSave={async (username) => {
+          let saved = null;
+          const ok = await run('username', async () => {
+            const res = await api.users.updateMe({ username });
+            saved = res.user?.username || null;
+            if (saved !== username.toLowerCase()) throw new Error('Usernames are not available yet. Try again after the next update.');
+            return res;
+          }, 'Username updated');
+          if (ok && saved) navigate(`/u/${saved}`, { replace: true });
+          return ok;
+        }}
+      />
+      <EditableField
+        id="college"
+        label="College"
+        value={user.college}
+        placeholder="Not set"
+        maxLength={80}
+        help="Puts you on your college's leaderboard. Leave empty to remove."
+        suggest={(q) => api.users.colleges(q).then((r) => r.colleges.map((c) => c.name))}
+        onSave={(college) => run('college', () => api.users.updateMe({ college }), college ? 'College saved' : 'College removed')}
+      />
+    </>
+  );
+}
+
+function EmailPrefs() {
+  const { user } = useAuth();
+  const [busy, run] = useSave();
+  const prefs = user.emailPrefs || {};
+  const set = (key) => (value) => run(key, () => api.users.updateMe({ emailPrefs: { [key]: value } }));
+  return (
+    <div className="space-y-3">
+      <p className="label mb-0">Emails</p>
+      <Toggle checked={prefs.streak !== false} disabled={!!busy} onChange={set('streak')} label="Streak reminders" description="One evening email when your streak is about to break." />
+      <Toggle checked={prefs.challenges !== false} disabled={!!busy} onChange={set('challenges')} label="Challenges" description="When someone challenges you to a 1v1." />
+      <Toggle checked={prefs.weekly !== false} disabled={!!busy} onChange={set('weekly')} label="Weekly recap" description="Monday summary of your battles and rating." />
+    </div>
+  );
+}
+
 function CopyCode({ code }) {
   return (
     <div className="flex items-center gap-2">
@@ -149,7 +272,9 @@ function LeetCodeAccount() {
   const lc = user.leetcode;
   const claim = user.leetcodeClaim;
   const returnTo = location.state?.from;
-  const verify = () => run('verify', api.users.verifyLeetCode, 'LeetCode account verified and linked');
+  const verify = async () => {
+    if (await run('verify', api.users.verifyLeetCode, 'LeetCode account verified and linked')) track('leetcode_linked');
+  };
 
   // Mid-claim: show the steps.
   if (claim) {
@@ -240,8 +365,12 @@ function AccountCard() {
       <h2 className="section-title mb-4">Account</h2>
       <div className="space-y-5">
         <DisplayName />
+        <ProfileFields />
         <div className="border-t border-ink-800 pt-5">
           <LeetCodeAccount />
+        </div>
+        <div className="border-t border-ink-800 pt-5">
+          <EmailPrefs />
         </div>
       </div>
     </section>
@@ -303,6 +432,92 @@ function RatingTrend({ rating, history }) {
   );
 }
 
+/* ---------------- Badges and invites ---------------- */
+
+function Badges({ player }) {
+  const earned = new Map((player.badges || []).map((b) => [b.key, b]));
+  return (
+    <section className="card p-5">
+      <div className="mb-4 flex items-baseline justify-between">
+        <h2 className="section-title">Badges</h2>
+        <span className="font-mono text-xs text-ink-500">
+          {earned.size}/{BADGES.length}
+        </span>
+      </div>
+      <ul className="grid grid-cols-3 gap-3">
+        {BADGES.map(({ key, name, description, icon: Icon }) => {
+          const got = earned.get(key);
+          return (
+            <li key={key} title={`${name}: ${description}`} className={clsx('flex flex-col items-center gap-1.5 rounded-xl border p-2.5 text-center', got ? 'border-brand-500/40 bg-brand-500/10' : 'border-ink-800 opacity-45')}>
+              <Icon className={clsx('h-5 w-5', got ? 'text-brand-400' : 'text-ink-500')} />
+              <span className={clsx('text-[11px] leading-tight', got ? 'text-white' : 'text-ink-400')}>{name}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function InviteCard({ user }) {
+  return (
+    <section className="card space-y-3 p-5">
+      <h2 className="section-title flex items-center gap-2">
+        Invite friends
+        <InfoTip label="About invites" align="right">
+          When a friend signs up through your link and finishes their first battle, you both get 100 XP. Bring 3 and you earn the Recruiter badge.
+        </InfoTip>
+      </h2>
+      <p className="text-sm text-ink-400">
+        Friends you brought: <span className="font-mono font-semibold text-white">{user.referralCount || 0}</span>
+      </p>
+      <ShareButtons kind="invite" compact url={shareUrl.app(user)} copyUrl={directUrl.app(user)} text="I battle friends on LeetCode problems on League of Coders. Join me:" />
+    </section>
+  );
+}
+
+function ChallengeButton({ player }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [busy, setBusy] = useState(false);
+  if (!user) {
+    return (
+      <Link to="/login" state={{ from: location.pathname }} className="btn-primary btn-sm">
+        <Swords className="h-3.5 w-3.5" /> Challenge
+      </Link>
+    );
+  }
+  if (!user.leetcode?.verified) {
+    return (
+      <Link to="/u/me" state={{ from: location.pathname }} className="btn-primary btn-sm" title="Verify your LeetCode account to challenge players">
+        <Swords className="h-3.5 w-3.5" /> Challenge
+      </Link>
+    );
+  }
+  return (
+    <button
+      className="btn-primary btn-sm"
+      disabled={busy}
+      title="Opens a private 30-minute 1v1 lobby and invites them"
+      onClick={async () => {
+        setBusy(true);
+        try {
+          const { matchCode } = await api.users.challenge(profileHandle(player));
+          track('direct_challenge_sent');
+          toast.success(`Challenge sent to ${player.name.split(' ')[0]}`);
+          navigate(`/m/${matchCode}`);
+        } catch (err) {
+          toast.error(err.message);
+          setBusy(false);
+        }
+      }}
+    >
+      {busy ? <Spinner className="h-3.5 w-3.5" /> : <Swords className="h-3.5 w-3.5" />} Challenge
+    </button>
+  );
+}
+
 /* ---------------- Page ---------------- */
 
 function Stat({ label, value, className }) {
@@ -317,10 +532,13 @@ function Stat({ label, value, className }) {
 export default function Profile() {
   const { id } = useParams();
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
-  const targetId = id === 'me' ? user?.id : id;
-  const isMe = user && targetId === user.id;
+  // Profiles open by username (/u/aditi) or, for older links, by id.
+  const targetId = id === 'me' ? user?.username || user?.id : id;
+  const matches = (p) => !!p && !!targetId && (p.id === targetId || p.username === targetId.toLowerCase());
+  const isMe = !!user && (targetId === user.id || targetId?.toLowerCase() === user.username || (data && matches(data.player) && data.player.id === user.id));
 
   useEffect(() => {
     if (!targetId) return;
@@ -332,12 +550,18 @@ export default function Profile() {
   }, [targetId, user?.stats?.rating, user?.leetcode?.verified, user?.leetcode?.username, user?.name]);
 
   useEffect(() => {
-    if (data) document.title = `${data.player.name} · League of Coders`;
+    if (!data) return;
+    document.title = `${data.player.name} · League of Coders`;
+    // Old id links and /u/me settle on the readable /u/username address.
+    if (data.player.username && id !== data.player.username && matches(data.player)) {
+      navigate(`/u/${data.player.username}${window.location.search}`, { replace: true, state: window.history.state?.usr });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   if (id === 'me' && !authLoading && !user) return <Navigate to="/login" replace state={{ from: '/u/me' }} />;
   if (error) return <EmptyState title="Player not found" />;
-  if (!data || data.player.id !== targetId) return <PageLoader />;
+  if (!data || !matches(data.player)) return <PageLoader />;
 
   const { player, history } = data;
   const s = player.stats;
@@ -359,9 +583,23 @@ export default function Profile() {
                 {player.name} <VerifiedBadge verified={player.leetcode?.verified} />
               </h1>
               <p className="mt-2 text-sm text-ink-300">
+                {player.username && (
+                  <>
+                    <span className="text-ink-200">@{player.username}</span>
+                    <span className="text-ink-500"> · </span>
+                  </>
+                )}
+                {player.college && (
+                  <>
+                    <Link to={`/league?tab=colleges&college=${encodeURIComponent(player.college)}`} className="inline-flex items-center gap-1 hover:text-white hover:underline">
+                      <GraduationCap className="h-3.5 w-3.5" /> {player.college}
+                    </Link>
+                    <span className="text-ink-500"> · </span>
+                  </>
+                )}
                 {player.leetcode ? (
                   <a href={`https://leetcode.com/u/${player.leetcode.username}/`} target="_blank" rel="noreferrer" className="hover:text-white hover:underline">
-                    @{player.leetcode.username}
+                    LeetCode @{player.leetcode.username}
                   </a>
                 ) : (
                   'No LeetCode linked'
@@ -376,6 +614,7 @@ export default function Profile() {
               </p>
             </div>
             <div className="flex items-end gap-4">
+              {!isMe && <ChallengeButton player={player} />}
               <FriendButton playerId={player.id} />
               <div className="text-right">
                 <p className="text-xs uppercase tracking-wider text-ink-400">Rating</p>
@@ -389,6 +628,22 @@ export default function Profile() {
             <Stat label="Win rate" value={`${winRate}%`} />
             <Stat label="Solved in battles" value={s.solved} />
             <Stat label="Points" value={s.points.toLocaleString()} />
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-ink-500">{isMe ? 'Share your profile' : 'Share'}</span>
+            <ShareButtons
+              kind="profile"
+              compact
+              url={shareUrl.profile(profileHandle(player), user)}
+              copyUrl={directUrl.profile(profileHandle(player), user)}
+              text={
+                isMe
+                  ? `My League of Coders profile: ${tier.name}, rating ${s.rating}, ${s.wins} wins. Challenge me:`
+                  : `${player.name} is ${tier.name} (${s.rating}) on League of Coders.`
+              }
+              image={imageUrl.profile(profileHandle(player))}
+              imageName={`league-of-coders-${profileHandle(player)}.png`}
+            />
           </div>
         </section>
         {isMe && <AccountCard />}
@@ -444,7 +699,9 @@ export default function Profile() {
           </section>
         </div>
 
-        <aside>
+        <aside className="space-y-6">
+          {isMe && <InviteCard user={user} />}
+          <Badges player={player} />
           <section className="card p-5">
             <h2 className="section-title mb-4">Milestones</h2>
             <ul className="space-y-4">

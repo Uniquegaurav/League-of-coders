@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ArrowRight, Link2, Swords } from 'lucide-react';
 import { api } from '../lib/api';
+import { track } from '../lib/analytics';
 import { useAuth } from '../context/AuthContext';
 import MatchSettingsForm, { DEFAULT_SETTINGS } from '../components/match/MatchSettingsForm';
 import ScoringRules from '../components/match/ScoringRules';
@@ -54,6 +55,7 @@ export default function NewMatch() {
     setSubmitting(true);
     try {
       const { match } = await api.matches.create(form);
+      track('match_created', { solo: !!match.settings.solo, visibility: match.visibility, players: match.settings.maxPlayers });
       const inviteId = params.get('invite');
       if (inviteId && !form.settings.solo) {
         api.friends

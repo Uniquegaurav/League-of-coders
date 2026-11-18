@@ -50,7 +50,7 @@ function PlayerSearch() {
             return (
               <li key={p.id} className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-ink-800/60">
                 <Avatar name={p.name} src={p.avatar} size={32} />
-                <Link to={`/u/${p.id}`} className="min-w-0 flex-1">
+                <Link to={`/u/${p.username || p.id}`} className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-ink-200 hover:text-white">{p.name}</p>
                   <p className="text-xs text-ink-500">
                     <span className={tier.color}>{tier.name}</span> · {p.stats.rating}
@@ -77,7 +77,7 @@ function Requests() {
           <li key={r.id} className="flex items-center gap-3 py-2.5">
             <Avatar name={r.from.name} src={r.from.avatar} size={32} />
             <p className="min-w-0 flex-1 truncate text-sm">
-              <Link to={`/u/${r.from.id}`} className="font-medium text-white hover:underline">
+              <Link to={`/u/${r.from.username || r.from.id}`} className="font-medium text-white hover:underline">
                 {r.from.name}
               </Link>
               <span className="text-ink-500"> wants to be friends · {timeAgo(r.createdAt)}</span>
@@ -146,7 +146,7 @@ function FriendsTable({ friends, me }) {
             return (
               <tr key={f.id} className="hover:bg-ink-850/60">
                 <td className="px-4 py-3">
-                  <Link to={`/u/${f.id}`} className="flex items-center gap-3 hover:underline">
+                  <Link to={`/u/${f.username || f.id}`} className="flex items-center gap-3 hover:underline">
                     <Avatar name={f.name} src={f.avatar} size={30} online={!!f.online} />
                     <span>
                       <span className="block font-medium text-ink-200">{f.name}</span>

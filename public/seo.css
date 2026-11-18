@@ -1,0 +1,33 @@
+/* Shared styles for the static search landing pages. Matches the app's dark theme. */
+:root { --bg: #06070b; --panel: #11131b; --line: #262a38; --text: #e7e8ee; --sub: #a3a7b8; --brand: #a18bff; --brand-solid: #7c5cff; --gold: #fbbf24; --easy: #34d399; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.65 Satoshi, Inter, -apple-system, 'Segoe UI', sans-serif; }
+a { color: var(--brand); }
+.wrap { max-width: 760px; margin: 0 auto; padding: 0 max(20px, env(safe-area-inset-left)) 80px; }
+header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 0; }
+.logo { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 700; font-size: 18px; }
+.logo span.mark { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--brand-solid), #22d3ee); }
+.logo em { color: var(--gold); font-style: normal; }
+.btn { display: inline-flex; align-items: center; gap: 8px; background: var(--brand-solid); color: #fff; text-decoration: none; font-weight: 600; padding: 12px 20px; border-radius: 12px; }
+.btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--text); }
+h1 { font-size: clamp(34px, 6vw, 52px); line-height: 1.08; letter-spacing: -0.02em; margin: 48px 0 16px; text-wrap: balance; color: #fff; }
+h2 { font-size: 26px; margin: 48px 0 12px; color: #fff; text-wrap: balance; }
+h3 { font-size: 18px; margin: 0 0 6px; color: #fff; }
+p, li { color: var(--sub); }
+.lede { font-size: 20px; color: var(--text); }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0 8px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 16px; }
+.grid.two { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; }
+.card p { margin: 0; font-size: 15px; }
+ol.steps { padding-left: 1.2em; }
+ol.steps li { margin: 8px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.table { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; margin-top: 16px; }
+th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--sub); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+tr:last-child td { border-bottom: 0; }
+details { border-bottom: 1px solid var(--line); padding: 14px 0; }
+summary { cursor: pointer; color: #fff; font-weight: 600; }
+footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 14px; color: var(--sub); display: flex; flex-wrap: wrap; gap: 14px; }
+footer a { color: var(--sub); }

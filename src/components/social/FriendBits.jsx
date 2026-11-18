@@ -12,11 +12,11 @@ export function FriendRow({ friend, children }) {
   const tier = tierFor(friend.stats.rating);
   return (
     <div className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-ink-800/60">
-      <Link to={`/u/${friend.id}`} className="shrink-0">
+      <Link to={`/u/${friend.username || friend.id}`} className="shrink-0">
         <Avatar name={friend.name} src={friend.avatar} size={32} online={!!friend.online} />
       </Link>
       <div className="min-w-0 flex-1">
-        <Link to={`/u/${friend.id}`} className="block truncate text-sm font-medium text-ink-200 hover:text-white">
+        <Link to={`/u/${friend.username || friend.id}`} className="block truncate text-sm font-medium text-ink-200 hover:text-white">
           {friend.name}
         </Link>
         <p className="text-xs text-ink-500">

@@ -1,3 +1,8 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/s/:path*", "destination": "https://league-of-coders-backend.onrender.com/share/:path*" },
+    { "source": "/og/:path*", "destination": "https://league-of-coders-backend.onrender.com/og/:path*" },
+    { "source": "/sitemap.xml", "destination": "https://league-of-coders-backend.onrender.com/sitemap.xml" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

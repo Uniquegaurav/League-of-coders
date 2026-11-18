@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Clock, Crown, Globe, Layers, Link2, Lock, LogOut, Play, Settings2, Tags, Users, X } from 'lucide-react';
 import { api } from '../../lib/api';
+import { track } from '../../lib/analytics';
+import { clock } from '../../lib/format';
 import { Avatar, Spinner, Toggle, VerifiedBadge } from '../ui';
 import ChatPanel from './ChatPanel';
 import InviteBox from './InviteBox';
@@ -60,13 +62,29 @@ function SettingsSummary({ match }) {
   );
 }
 
-export default function Lobby({ match, messages, me, user, setMatch }) {
+function eventLine(match, now) {
+  const starts = new Date(match.event.startsAt).getTime();
+  const left = starts - (typeof now === 'function' ? now() : Date.now());
+  const at = new Date(starts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return left > 0
+    ? `Starts automatically at ${at} (in ${clock(left)}). Needs 2 or more players. ${match.participants.length} in the room.`
+    : `Starting now. ${match.participants.length} in the room.`;
+}
+
+export default function Lobby({ match, messages, me, user, setMatch, now }) {
   const location = useLocation();
   const isHost = user && match.host === user.id;
   const [busy, run] = useAction(setMatch);
   const [editing, setEditing] = useState(null);
   const solo = !!match.settings.solo;
   const slots = solo ? 0 : Math.max(0, match.settings.maxPlayers - match.participants.length);
+  const [, tick] = useState(0);
+  // Scheduled lobbies show a live countdown to their start time.
+  useEffect(() => {
+    if (!match.event) return undefined;
+    const id = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, [match.event]);
 
   const saveSettings = async () => {
     const res = await run('settings', () => api.matches.update(match.code, editing), 'Settings updated');
@@ -83,7 +101,9 @@ export default function Lobby({ match, messages, me, user, setMatch }) {
             <p className="text-sm text-ink-400">
               {solo
                 ? `Solo test. ${match.settings.durationMin} minutes on the clock. Start when you are ready.`
-                : `Waiting for the host to start. ${match.participants.length} in the room.`}
+                : match.event
+                  ? eventLine(match, now)
+                  : `Waiting for the host to start. ${match.participants.length} in the room.`}
             </p>
           </div>
           <div className="flex gap-2">
@@ -93,7 +113,14 @@ export default function Lobby({ match, messages, me, user, setMatch }) {
               </button>
             ) : user ? (
               user.leetcode?.verified ? (
-                <button className="btn-primary" disabled={!!busy} onClick={() => run('join', () => api.matches.join(match.code), 'You joined the battle!')}>
+                <button
+                  className="btn-primary"
+                  disabled={!!busy}
+                  onClick={async () => {
+                    const res = await run('join', () => api.matches.join(match.code), 'You joined the battle!');
+                    if (res) track('match_joined', { event: match.event?.kind || null, players: match.participants.length + 1 });
+                  }}
+                >
                   {busy === 'join' ? <Spinner className="h-4 w-4" /> : <Users className="h-4 w-4" />} Join battle
                 </button>
               ) : (
@@ -103,7 +130,7 @@ export default function Lobby({ match, messages, me, user, setMatch }) {
               )
             ) : (
               <Link to="/login" state={{ from: location.pathname }} className="btn-primary">
-                Sign in to join
+                <Users className="h-4 w-4" /> Sign up to join
               </Link>
             )}
             {isHost && (
