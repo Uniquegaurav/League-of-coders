@@ -73,9 +73,10 @@ export function VerifiedBadge({ verified }) {
   );
 }
 
-export function EmptyState({ icon: Icon, title, children, action }) {
+// `bare` drops the dashed outline, for empty states that already sit inside a panel.
+export function EmptyState({ icon: Icon, title, children, action, bare = false }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-ink-700 px-6 py-10 text-center">
+    <div className={clsx('flex flex-col items-center justify-center gap-2 px-6 py-10 text-center', !bare && 'rounded-2xl border border-dashed border-ink-700')}>
       {Icon && <Icon className="h-8 w-8 text-ink-500" />}
       <p className="font-medium text-ink-200">{title}</p>
       {children && <p className="max-w-sm text-sm text-ink-400">{children}</p>}
