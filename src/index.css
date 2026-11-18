@@ -70,6 +70,19 @@
   .chip {
     @apply inline-flex items-center gap-1 rounded-full border border-ink-700 bg-ink-800/80 px-2.5 py-0.5 text-xs font-medium text-ink-300;
   }
+  /* Borderless surface: depth from a soft gradient and shadow instead of an outline. */
+  .panel {
+    @apply rounded-3xl bg-gradient-to-b from-white/[0.05] to-white/[0.015] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_24px_48px_-28px_rgba(0,0,0,0.9)];
+  }
+  .pill-tabs {
+    @apply inline-flex rounded-full bg-white/[0.05] p-1;
+  }
+  .pill-tab {
+    @apply rounded-full px-4 py-1.5 text-sm font-medium text-ink-400 transition hover:text-white;
+  }
+  .pill-tab-active {
+    @apply bg-white/[0.1] text-white shadow-sm;
+  }
   .section-title {
     @apply font-display text-lg font-semibold text-white;
   }
@@ -268,7 +281,7 @@
   }
 }
 .ring-pulse {
-  animation: ring-pulse 2.4s ease-out infinite;
+  animation: ring-pulse 3.6s ease-out infinite;
 }
 @keyframes flicker {
   0%,
@@ -369,6 +382,25 @@
   .shimmer-text,
   .glow-pulse,
   .pop-in-x {
+    animation: none;
+  }
+}
+
+/* Tournament art floats very slightly. */
+@keyframes art-drift {
+  0%,
+  100% {
+    transform: translate(260px, 105px);
+  }
+  50% {
+    transform: translate(260px, 98px);
+  }
+}
+.art-drift {
+  animation: art-drift 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .art-drift {
     animation: none;
   }
 }

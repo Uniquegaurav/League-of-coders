@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { ArrowDown, ArrowRight, Link2, Swords, Timer, Trophy, UserPlus } from 'lucide-react';
+import { ArrowDown, ArrowRight, Link2, Swords, Timer, TrendingUp, UserPlus } from 'lucide-react';
 import { api } from '../lib/api';
 import { track } from '../lib/analytics';
-import { EventArt, QuickArt, SoloArt } from '../components/home/ModeArt';
+import { QuickArt, SoloArt } from '../components/home/ModeArt';
+import FeaturedCard from '../components/tournaments/FeaturedCard';
 import { useNow } from '../components/match/EventCard';
 import { clock } from '../lib/format';
 import { tierFor } from '../lib/rank';
@@ -45,7 +46,7 @@ const STEPS = [
   { icon: Link2, title: 'Link LeetCode', body: 'Connect your username once. Solves are read from your accepted submissions.' },
   { icon: Swords, title: 'Create or join', body: 'Pick the difficulty mix, topics, and duration, then share the invite link.' },
   { icon: Timer, title: 'Race the clock', body: 'Everyone gets the same shuffled set. Read it here, submit on LeetCode.' },
-  { icon: Trophy, title: 'Climb the ranks', body: 'Live scoreboard, first-solve bonuses, and Elo after every rated battle.' },
+  { icon: TrendingUp, title: 'Climb the ranks', body: 'Every battle earns XP. Tournaments move your rating.' },
 ];
 
 const SNAKE_STEP_S = 2; // seconds each card holds the light; 4 cards = 8s cycle
@@ -102,7 +103,7 @@ function StatsCard({ user }) {
   const tier = tierFor(s.rating);
   const { streak } = streakOf(user);
   return (
-    <div className="card p-5">
+    <div className="panel p-5">
       <div className="flex items-center gap-3">
         <Avatar name={user.name} src={user.avatar} size={44} />
         <div className="min-w-0">
@@ -117,11 +118,11 @@ function StatsCard({ user }) {
       </div>
       <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
         {[
-          ['Battles', s.matches],
+          ['Level', user.practice?.level ?? 1],
+          ['XP this week', (user.practice?.weekXp ?? 0).toLocaleString()],
           ['Wins', s.wins],
-          ['Win rate', `${s.matches ? Math.round((s.wins / s.matches) * 100) : 0}%`],
         ].map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-ink-800 bg-ink-950/40 py-2.5">
+          <div key={label} className="rounded-xl bg-white/[0.04] py-2.5">
             <dd className="font-display text-lg font-bold text-white">{value}</dd>
             <dt className="text-[11px] uppercase tracking-wider text-ink-500">{label}</dt>
           </div>
@@ -165,8 +166,8 @@ function TopPlayers({ players }) {
     <div className="card p-5">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="section-title">Top players</h2>
-        <Link to="/league" className="text-sm text-brand-400 hover:underline">
-          Full leaderboard
+        <Link to="/tournaments" className="text-sm text-brand-400 hover:underline">
+          All rankings
         </Link>
       </div>
       {players?.length ? (
@@ -276,7 +277,7 @@ function QuickPlay({ user, lobbies }) {
 // One of the three ways to play. Same shape for all three: art, title, one line, one button.
 function ModeCard({ art, title, info, body, action }) {
   return (
-    <section className="card card-hover group flex flex-col overflow-hidden">
+    <section className="panel group flex flex-col overflow-hidden transition duration-300 hover:-translate-y-0.5">
       {art}
       <div className="flex flex-1 flex-col gap-4 p-5">
         <div className="flex-1">
@@ -292,91 +293,46 @@ function ModeCard({ art, title, info, body, action }) {
   );
 }
 
-// The battle hour / next tournament, with its own countdown.
-function EventMode({ event }) {
-  const now = useNow();
-  if (!event) {
-    return (
-      <ModeCard
-        art={<EventArt />}
-        title="Battle hour"
-        info="A public battle every evening, and the Sunday Cup each week. Lobbies open 30 minutes before and start on their own with 2 or more players."
-        body="A public battle every evening."
-        action={
-          <Link to="/league" className={PLAY_CTA}>
-            See the schedule <ArrowRight className="h-4 w-4" />
-          </Link>
-        }
-      />
-    );
-  }
-  const startsIn = new Date(event.startsAt).getTime() - now;
-  const open = !!event.code && event.status === 'lobby';
-  const running = !!event.code && ['countdown', 'live'].includes(event.status);
-  const when = new Date(event.startsAt).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
-  return (
-    <ModeCard
-      art={<EventArt />}
-      title={event.name}
-      info="Public battles on a schedule. The lobby opens 30 minutes before and starts on its own once 2 or more players join. Up to 20 players, rated like any battle."
-      body={
-        running ? (
-          'Running now. Watch the live scoreboard.'
-        ) : open ? (
-          <>
-            Starts in <span className="font-mono text-white">{clock(Math.max(0, startsIn))}</span> · {event.players} joined
-          </>
-        ) : startsIn < 24 * 3600 * 1000 ? (
-          <>
-            Starts in <span className="font-mono text-white">{clock(Math.max(0, startsIn))}</span>
-          </>
-        ) : (
-          `Next: ${when}`
-        )
-      }
-      action={
-        event.code ? (
-          <Link to={`/m/${event.code}`} className={PLAY_CTA}>
-            {running ? 'Watch live' : 'Join the lobby'} <ArrowRight className="h-4 w-4" />
-          </Link>
-        ) : (
-          <Link to="/league" className={PLAY_CTA}>
-            See the schedule <ArrowRight className="h-4 w-4" />
-          </Link>
-        )
-      }
-    />
-  );
-}
-
-// Finished public battles as compact one-line rows.
+// Finished public battles, compact, for the sidebar. The winner's avatar leads each row.
 function RecentResults({ matches }) {
   if (!matches?.length) return null;
   return (
-    <section>
-      <h2 className="section-title mb-4">Recent results</h2>
-      <ul className="card divide-y divide-ink-800/70">
+    <section className="panel p-5">
+      <h2 className="section-title mb-3">Recent results</h2>
+      <ul className="space-y-1">
         {matches.map((m) => (
           <li key={m.code}>
-            <Link to={`/m/${m.code}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-ink-850/60">
-              <Trophy className="h-4 w-4 shrink-0 text-gold" />
-              <p className="min-w-0 flex-1 truncate text-sm text-ink-300">
-                <span className="font-medium text-white">{m.winner?.name || 'No winner'}</span>
-                {m.winner && ' won '}
-                <span className="text-ink-200">{m.name}</span>
-              </p>
-              <span className="hidden shrink-0 items-center gap-3 text-xs text-ink-500 sm:flex">
-                <span className="inline-flex items-center gap-1">
-                  <UserPlus className="h-3.5 w-3.5" /> {m.players}
-                </span>
-                <ProblemMix settings={m.settings} />
-                {m.winner && <span className="font-mono text-ink-300">{m.winner.score} pts</span>}
-              </span>
-              <span className="w-24 shrink-0 text-right text-xs text-ink-500">{timeAgo(m.finishedAt)}</span>
+            <Link to={`/m/${m.code}`} className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/[0.04]">
+              <Avatar name={m.winner?.name || m.name} src={m.winner?.avatar} size={30} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm text-ink-300">
+                  <span className="font-medium text-white">{m.winner?.name || 'No winner'}</span> {m.winner ? 'won' : 'in'} {m.name}
+                </p>
+                <p className="text-xs text-ink-500">
+                  {m.players} players · {timeAgo(m.finishedAt)}
+                </p>
+              </div>
             </Link>
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+// The next scheduled tournament as a featured artwork card on Compete.
+function NextTournament({ event }) {
+  const now = useNow();
+  if (!event) return null;
+  return (
+    <section>
+      <div className="mb-4 flex items-baseline justify-between">
+        <h2 className="section-title">Next tournament</h2>
+        <Link to="/tournaments" className="text-sm text-brand-400 hover:underline">
+          All tournaments
+        </Link>
+      </div>
+      <FeaturedCard event={event} now={now} />
     </section>
   );
 }
@@ -423,7 +379,9 @@ export default function CompeteHome() {
             <p className="mt-4 text-sm text-ink-300">
               You are <span className={tierFor(user.stats.rating).color}>{tierFor(user.stats.rating).name}</span>
               <span className="font-mono text-ink-200"> {user.stats.rating}</span>
-              <span className="text-ink-500"> · {user.stats.wins} wins in {user.stats.matches} rated battles</span>
+              <span className="text-ink-500">
+                {' '}· Level {user.practice?.level ?? 1} · {user.stats.wins} win{user.stats.wins === 1 ? '' : 's'} in {user.stats.matches} battle{user.stats.matches === 1 ? '' : 's'}
+              </span>
             </p>
           )}
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -458,7 +416,7 @@ export default function CompeteHome() {
 
           <section>
             <h2 className="section-title mb-4">Choose how to play</h2>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2">
               <ModeCard
                 art={<SoloArt />}
                 title="Solo test"
@@ -477,12 +435,13 @@ export default function CompeteHome() {
                 body="Jump into an open public battle."
                 action={<QuickPlay user={user} lobbies={open.data} />}
               />
-              <EventMode event={nextEvent} />
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-ink-700">
-            <div className="flex items-center justify-between border-b border-ink-700 bg-ink-900 px-5 py-3">
+          <NextTournament event={nextEvent} />
+
+          <section className="panel overflow-hidden">
+            <div className="flex items-center justify-between px-5 pb-1 pt-5">
               <div>
                 <h2 className="section-title">Open battles</h2>
                 <p className="text-sm text-ink-400">Join a lobby, or spectate a battle that is already live</p>
@@ -514,7 +473,7 @@ export default function CompeteHome() {
                       <Link {...authed(user, '/new?mode=battle')} className="btn-primary btn-sm">
                         Host one
                       </Link>
-                      <Link to="/league" className="btn-secondary btn-sm">
+                      <Link to="/tournaments" className="btn-secondary btn-sm">
                         See the schedule
                       </Link>
                     </div>
@@ -529,27 +488,31 @@ export default function CompeteHome() {
           </section>
 
 
-          <RecentResults matches={recent.data} />
-
-          <section id="how-it-works" className="scroll-mt-24">
-            <h2 className="section-title mb-4">How it works</h2>
-            <HowItWorks />
-          </section>
-
-          <section className="card p-6">
-            <h2 className="section-title mb-4">How scoring works</h2>
-            <ScoringRules />
-          </section>
         </div>
 
         <aside className="space-y-5">
           {user && <StatsCard user={user} />}
           <DailyProblemCard daily={daily.data} />
-          <FriendsPanel lobbyCode={myLobby?.code} />
+          <RecentResults matches={recent.data} />
           <TopPlayers players={top.data} />
+          <FriendsPanel lobbyCode={myLobby?.code} />
           <FriendActivity user={user} />
         </aside>
       </div>
+
+      {/* Reference material sits at the bottom, full width, reached from the "How it works" link in the hero. */}
+      <section id="how-it-works" className="scroll-mt-24 space-y-8 pt-4">
+        <div>
+          <h2 className="section-title mb-6 text-center text-2xl">How it works</h2>
+          <div className="mx-auto max-w-5xl">
+            <HowItWorks />
+          </div>
+        </div>
+        <div className="panel mx-auto max-w-5xl p-6">
+          <h2 className="section-title mb-4">How scoring works</h2>
+          <ScoringRules />
+        </div>
+      </section>
     </div>
   );
 }

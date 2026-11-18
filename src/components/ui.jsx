@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { Info, Loader2, ShieldCheck } from 'lucide-react';
@@ -133,42 +134,69 @@ export function ProgressBar({ value = 0, max = 1, className, barClassName = 'bg-
 }
 
 // Small "i" button that reveals the specifics, so page copy can stay short.
-export function InfoTip({ children, label = 'More info', className, align = 'left' }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+// The tip renders in a portal with fixed positioning, so cards with overflow-hidden can never clip it.
+export function InfoTip({ children, label = 'More info', className }) {
+  const [pos, setPos] = useState(null);
+  const btn = useRef(null);
+  const tip = useRef(null);
+  const open = !!pos;
+
+  const place = () => {
+    const r = btn.current?.getBoundingClientRect();
+    if (!r) return;
+    const width = Math.min(288, window.innerWidth - 24);
+    const left = Math.max(12, Math.min(r.left + r.width / 2 - width / 2, window.innerWidth - width - 12));
+    const below = r.bottom + 8;
+    const flip = below + 160 > window.innerHeight && r.top > 180;
+    setPos({ left, width, top: flip ? undefined : below, bottom: flip ? window.innerHeight - r.top + 8 : undefined });
+  };
+
   useEffect(() => {
     if (!open) return undefined;
-    const close = (e) => !ref.current?.contains(e.target) && setOpen(false);
-    const esc = (e) => e.key === 'Escape' && setOpen(false);
+    const close = (e) => !btn.current?.contains(e.target) && !tip.current?.contains(e.target) && setPos(null);
+    const esc = (e) => e.key === 'Escape' && setPos(null);
+    const hide = () => setPos(null);
     document.addEventListener('mousedown', close);
     document.addEventListener('keydown', esc);
+    window.addEventListener('scroll', hide, true);
+    window.addEventListener('resize', hide);
     return () => {
       document.removeEventListener('mousedown', close);
       document.removeEventListener('keydown', esc);
+      window.removeEventListener('scroll', hide, true);
+      window.removeEventListener('resize', hide);
     };
   }, [open]);
+
   return (
-    <span ref={ref} className={clsx('relative inline-flex align-middle', className)}>
+    <span className={clsx('relative inline-flex align-middle', className)}>
       <button
+        ref={btn}
         type="button"
         aria-label={label}
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (open) setPos(null);
+          else place();
+        }}
         className="inline-flex h-5 w-5 items-center justify-center rounded-full text-ink-400 transition hover:text-white focus-visible:text-white"
       >
         <Info className="h-4 w-4" />
       </button>
-      {open && (
-        <span
-          role="tooltip"
-          className={clsx(
-            'absolute top-7 z-30 w-72 max-w-[80vw] rounded-xl border border-ink-700 bg-ink-900 p-3.5 text-left text-sm font-normal normal-case leading-relaxed tracking-normal text-ink-300 shadow-xl',
-            align === 'right' ? 'right-0' : 'left-0'
-          )}
-        >
-          {children}
-        </span>
-      )}
+      {open &&
+        createPortal(
+          <span
+            ref={tip}
+            role="tooltip"
+            style={{ position: 'fixed', left: pos.left, top: pos.top, bottom: pos.bottom, width: pos.width }}
+            className="z-[100] rounded-xl border border-ink-700 bg-ink-900/95 p-3.5 text-left text-sm font-normal normal-case leading-relaxed tracking-normal text-ink-300 shadow-2xl backdrop-blur"
+          >
+            {children}
+          </span>,
+          document.body
+        )}
     </span>
   );
 }

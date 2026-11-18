@@ -49,10 +49,9 @@ export function SoloArt() {
 export function QuickArt() {
   return (
     <Frame from="from-neon-500/25 via-ink-900">
-      {[0, 0.8, 1.6].map((d) => (
-        <span key={d} className="ring-pulse absolute h-24 w-24 rounded-full border-2 border-neon-400/60" style={{ animationDelay: `${d}s` }} />
-      ))}
-      <svg viewBox="0 0 64 64" className="flicker relative h-16 w-16">
+      <span className="ring-pulse absolute h-24 w-24 rounded-full border border-neon-400/40" />
+      <span className="absolute h-20 w-20 rounded-full bg-neon-500/10" />
+      <svg viewBox="0 0 64 64" className="relative h-16 w-16 drop-shadow-[0_0_10px_rgba(94,234,212,0.5)]">
         <defs>
           <linearGradient id="bolt" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#d5fff7" />
@@ -60,38 +59,6 @@ export function QuickArt() {
           </linearGradient>
         </defs>
         <path d="M36 4 L12 36 H29 L24 60 L52 24 H34 Z" fill="url(#bolt)" stroke="#0b3d3a" strokeWidth="1.5" strokeLinejoin="round" />
-      </svg>
-    </Frame>
-  );
-}
-
-/** Battle hour / tournament: a trophy under slowly turning light rays, with sparkles. */
-export function EventArt() {
-  return (
-    <Frame from="from-gold/20 via-ink-900">
-      <div
-        className="spin-slower absolute h-72 w-72 opacity-40"
-        style={{ background: 'repeating-conic-gradient(from 0deg, rgba(227,199,122,0.35) 0deg 8deg, transparent 8deg 24deg)', maskImage: 'radial-gradient(circle, #000 20%, transparent 65%)', WebkitMaskImage: 'radial-gradient(circle, #000 20%, transparent 65%)' }}
-      />
-      {[
-        ['22%', '30%', 0],
-        ['74%', '26%', 0.7],
-        ['66%', '68%', 1.4],
-        ['30%', '70%', 1.9],
-      ].map(([l, t, d]) => (
-        <span key={`${l}${t}`} className="twinkle absolute h-1.5 w-1.5 rounded-full bg-gold" style={{ left: l, top: t, animationDelay: `${d}s`, boxShadow: '0 0 8px #e3c77a' }} />
-      ))}
-      <svg viewBox="0 0 64 64" className="relative h-16 w-16 drop-shadow-[0_0_12px_rgba(227,199,122,0.55)]">
-        <defs>
-          <linearGradient id="cup" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#fff3cf" />
-            <stop offset="1" stopColor="#c9a24a" />
-          </linearGradient>
-        </defs>
-        <path d="M18 8 H46 V22 C46 32 40 38 32 38 C24 38 18 32 18 22 Z" fill="url(#cup)" />
-        <path d="M18 12 H10 C10 22 14 26 19 27 M46 12 H54 C54 22 50 26 45 27" fill="none" stroke="#e3c77a" strokeWidth="3" strokeLinecap="round" />
-        <rect x="29" y="38" width="6" height="9" fill="#c9a24a" />
-        <rect x="20" y="47" width="24" height="7" rx="2" fill="url(#cup)" />
       </svg>
     </Frame>
   );

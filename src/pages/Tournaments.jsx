@@ -1,124 +1,128 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Trophy } from 'lucide-react';
+import clsx from 'clsx';
 import { api } from '../lib/api';
 import { timeAgo } from '../lib/format';
 import usePolling from '../hooks/usePolling';
-import EventCard from '../components/match/EventCard';
-import { Avatar, EmptyState, InfoTip, Spinner } from '../components/ui';
+import { useNow } from '../components/match/EventCard';
+import FeaturedCard from '../components/tournaments/FeaturedCard';
+import { ProblemMix } from '../components/match/MatchCard';
+import TournamentArt from '../components/tournaments/TournamentArt';
+import Ranking from '../components/tournaments/Ranking';
+import { Avatar, InfoTip, Spinner } from '../components/ui';
 
-const PLACE = ['text-gold', 'text-ink-300', 'text-amber-600'];
-const SHOW_UPCOMING = 4;
-const SHOW_PAST = 3;
-
-function PastCard({ cup }) {
+function PastTournaments({ cups }) {
+  const [all, setAll] = useState(false);
+  const shown = all ? cups : cups.slice(0, 5);
   return (
-    <Link to={`/m/${cup.code}`} className="card card-hover block p-5">
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="truncate font-semibold text-white">{cup.name}</p>
-        <p className="shrink-0 text-xs text-ink-500">{timeAgo(cup.finishedAt)}</p>
+    <section className="panel p-5 sm:p-6">
+      <div className="pill-tabs">
+        <span className="pill-tab pill-tab-active">Past tournaments</span>
       </div>
-      <p className="text-xs text-ink-500">{cup.players} players</p>
-      <ol className="mt-4 space-y-2">
-        {cup.podium.map((p, i) => (
-          <li key={p.id} className="flex items-center gap-3 text-sm">
-            <span className={`w-4 font-mono font-bold ${PLACE[i]}`}>{i + 1}</span>
-            <Avatar name={p.name} src={p.avatar} size={26} />
-            <span className="min-w-0 flex-1 truncate text-ink-200">{p.name}</span>
-            <span className="font-mono text-ink-300">{p.score}</span>
-          </li>
-        ))}
-      </ol>
-    </Link>
+      {cups.length ? (
+        <ul className="mt-4 space-y-2">
+          {shown.map((cup) => {
+            const winner = cup.podium[0];
+            return (
+              <li key={cup.code}>
+                <Link to={`/m/${cup.code}`} className="group flex items-center gap-4 rounded-2xl p-2 transition hover:bg-white/[0.04]">
+                  <TournamentArt kind={cup.kind} compact className="h-16 w-24 shrink-0 rounded-xl sm:w-28" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold text-white">{cup.name}</p>
+                    <p className="text-xs text-ink-500">
+                      {timeAgo(cup.finishedAt)} · {cup.players} players
+                    </p>
+                    {winner && (
+                      <p className="mt-1 flex items-center gap-1.5 truncate text-xs text-ink-300">
+                        <Avatar name={winner.name} src={winner.avatar} size={16} /> {winner.name} won with {winner.score}
+                      </p>
+                    )}
+                  </div>
+                  <span className="hidden shrink-0 rounded-full bg-brand-500/15 px-3 py-1 text-xs font-semibold text-brand-300 transition group-hover:bg-brand-500/25 sm:inline">
+                    Results
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="py-10 text-center text-sm text-ink-400">Results of the Sunday Cup and planned tournaments show up here.</p>
+      )}
+      {cups.length > 5 && (
+        <button className="mt-3 text-sm text-brand-400 hover:underline" onClick={() => setAll((v) => !v)}>
+          {all ? 'Show fewer' : `Show all ${cups.length}`}
+        </button>
+      )}
+    </section>
   );
 }
 
-/** Tournaments block at the top of the League page: what is next, what is coming, and who won recently. */
-export function TournamentsSection() {
+export default function Tournaments() {
   const { data, loading, error } = usePolling(() => api.events.list(), 30000);
-  const [allUpcoming, setAllUpcoming] = useState(false);
-  const [allPast, setAllPast] = useState(false);
+  const now = useNow();
 
-  const heading = (
-    <h2 className="section-title flex items-center gap-2">
-      <Trophy className="h-5 w-5 text-gold" /> Tournaments
-      <InfoTip label="About tournaments">
-        Every day at the same time there is a public battle hour. On Sundays it becomes the Sunday Cup: 60 minutes, one Easy, two Medium and one Hard.
-        Planned tournaments are listed here too. Lobbies open 30 minutes before and start on their own once 2 or more players have joined. Up to 20 players,
-        rated like any battle.
-      </InfoTip>
-    </h2>
-  );
+  useEffect(() => {
+    document.title = 'Tournaments · League of Coders';
+  }, []);
 
-  if (loading && !data) {
-    return (
-      <section className="space-y-4">
-        {heading}
-        <div className="flex justify-center py-10">
-          <Spinner className="h-6 w-6 text-ink-500" />
-        </div>
-      </section>
-    );
-  }
-  if (error && !data) {
-    return (
-      <section className="space-y-4">
-        {heading}
-        <EmptyState icon={Trophy} title="Tournaments are not available yet">
-          They will appear here after the next server update.
-        </EmptyState>
-      </section>
-    );
-  }
-
-  const [next, ...rest] = data?.upcoming || [];
-  const upcoming = allUpcoming ? rest : rest.slice(0, SHOW_UPCOMING);
-  const cups = data?.cups || [];
-  const past = allPast ? cups : cups.slice(0, SHOW_PAST);
+  const upcoming = data?.upcoming || [];
+  // Lead with the next event and the next Sunday Cup (or the one after).
+  const first = upcoming[0];
+  const second = upcoming.find((e) => e !== first && e.kind === 'cup') || upcoming[1];
+  const featured = [first, second].filter(Boolean);
+  const more = upcoming.filter((e) => !featured.includes(e)).slice(0, 6);
 
   return (
-    <section className="space-y-6">
-      {heading}
-      {next && (
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">Next up</p>
-          <EventCard event={next} className="border-brand-500/40" />
+    <div className="space-y-12 pb-6">
+      <header className="pt-8 text-center sm:pt-14">
+        <h1 className="flex items-center justify-center gap-2 font-display text-4xl font-bold tracking-tight text-white drop-shadow sm:text-5xl">
+          Tournaments
+          <InfoTip label="About tournaments">
+            A public battle hour every evening, the Sunday Cup each week, and planned tournaments. Lobbies open 30 minutes before and start on their own
+            once 2 or more players join. Up to 20 players. Tournaments are the only battles that move your rating.
+          </InfoTip>
+        </h1>
+        <p className="mx-auto mt-3 max-w-lg text-lg text-ink-300">Compete on a schedule and climb the rating.</p>
+      </header>
+
+      {loading && !data ? (
+        <div className="flex justify-center py-16">
+          <Spinner className="h-6 w-6 text-ink-500" />
         </div>
-      )}
-      {rest.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">Coming up</p>
-          <div className="grid gap-3 lg:grid-cols-2">
-            {upcoming.map((e) => (
-              <EventCard key={e.key} event={e} />
+      ) : error && !data ? (
+        <p className="text-center text-sm text-ink-400">The schedule is not available right now.</p>
+      ) : (
+        <>
+          <section className={clsx('mx-auto grid max-w-5xl gap-6', featured.length > 1 && 'md:grid-cols-2')}>
+            {featured.map((e) => (
+              <FeaturedCard key={e.key} event={e} now={now} />
             ))}
-          </div>
-          {rest.length > SHOW_UPCOMING && (
-            <button className="text-sm text-brand-400 hover:underline" onClick={() => setAllUpcoming((v) => !v)}>
-              {allUpcoming ? 'Show fewer' : `Show all ${rest.length}`}
-            </button>
+          </section>
+
+          {more.length > 0 && (
+            <section className="mx-auto max-w-5xl">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-ink-500">Also coming up</h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {more.map((e) => (
+                  <div key={e.key} className="space-y-2">
+                    <FeaturedCard event={e} now={now} size="sm" />
+                    <div className="flex items-center gap-2 px-1 text-xs text-ink-500">
+                      <ProblemMix settings={e.settings} />
+                      {e.description && <span className="truncate">{e.description}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
           )}
-        </div>
+        </>
       )}
-      <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">Recent winners</p>
-        {cups.length ? (
-          <>
-            <div className="grid gap-4 md:grid-cols-3">
-              {past.map((cup) => (
-                <PastCard key={cup.code} cup={cup} />
-              ))}
-            </div>
-            {cups.length > SHOW_PAST && (
-              <button className="text-sm text-brand-400 hover:underline" onClick={() => setAllPast((v) => !v)}>
-                {allPast ? 'Show fewer' : `Show all ${cups.length}`}
-              </button>
-            )}
-          </>
-        ) : (
-          <p className="card p-4 text-sm text-ink-400">Winners of each Sunday Cup and planned tournament show up here.</p>
-        )}
+
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <Ranking />
+        <PastTournaments cups={data?.cups || []} />
       </div>
-    </section>
+    </div>
   );
 }

@@ -11,7 +11,7 @@ import { Avatar } from './ui';
 const LINKS = [
   { to: '/', label: 'Compete', end: true },
   { to: '/practice', label: 'Practice' },
-  { to: '/league', label: 'League' },
+  { to: '/tournaments', label: 'Tournaments' },
   { to: '/community', label: 'Community' },
 ];
 

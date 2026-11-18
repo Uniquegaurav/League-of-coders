@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
-import { Clock, Eye, Trophy, Users } from 'lucide-react';
+import { Avatar } from '../ui';
+import { Clock, Eye, Users } from 'lucide-react';
 import { timeAgo } from '../../lib/format';
 
 const STATUS = {
@@ -58,8 +59,8 @@ export default function MatchCard({ match, joined }) {
       </div>
       {match.status === 'finished' ? (
         match.winner && (
-          <p className="inline-flex items-center gap-1.5 text-sm text-ink-200 [&>svg]:text-gold">
-            <Trophy className="h-4 w-4" /> {match.winner.name} · {match.winner.score} pts
+          <p className="inline-flex items-center gap-2 text-sm text-ink-200">
+            <Avatar name={match.winner.name} src={match.winner.avatar} size={20} /> {match.winner.name} won · {match.winner.score} pts
           </p>
         )
       ) : joined ? (
