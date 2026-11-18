@@ -26,23 +26,22 @@ export default function JoinByCode({ compact, onImage }) {
       <input
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder={compact ? 'Room code' : onImage ? 'Room code or invite link' : 'Enter room code or paste invite link'}
+        placeholder={compact ? 'Room code' : onImage ? 'Have a room code? Paste it or the invite link' : 'Enter room code or paste invite link'}
         className={clsx(
-          'input font-mono uppercase tracking-widest placeholder:normal-case placeholder:tracking-normal',
+          'input font-mono uppercase tracking-widest placeholder:font-sans placeholder:normal-case placeholder:tracking-normal',
           onImage && 'border-white/25 bg-ink-950/70 py-3 placeholder:text-ink-300 backdrop-blur-md hover:border-white/40'
         )}
         aria-label="Room code"
       />
-      <button
-        type="submit"
-        disabled={!code}
-        className={clsx(
-          'btn-secondary shrink-0',
-          onImage && 'border-white/25 bg-ink-950/70 py-3 text-white backdrop-blur-md hover:border-white/40 disabled:text-ink-300 disabled:opacity-100'
-        )}
-      >
-        Join <ArrowRight className="h-4 w-4" />
-      </button>
+      {/* Join only makes sense once there is a code to join, so it appears when one is typed. */}
+      {code && (
+        <button
+          type="submit"
+          className={clsx('btn-primary pop-in-x shrink-0', onImage && 'py-3')}
+        >
+          Join {code} <ArrowRight className="h-4 w-4" />
+        </button>
+      )}
     </form>
   );
 }

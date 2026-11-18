@@ -168,3 +168,207 @@
 .problem-html .example {
   @apply my-3;
 }
+
+/* ---------------------------------------------------------------- Compete page motion */
+/* A light that runs once around a card's border; cards take turns (see --snake-delay). */
+@property --snake-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+.snake {
+  position: relative;
+  isolation: isolate;
+}
+.snake::before,
+.snake::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  animation: snake-run var(--snake-cycle, 8s) linear infinite;
+  animation-delay: var(--snake-delay, 0s);
+}
+.snake::before {
+  padding: 1.5px;
+  background: conic-gradient(from var(--snake-angle), transparent 0deg 230deg, rgba(124, 92, 255, 0.35) 290deg, #a18bff 335deg, #5eead4 358deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.snake::after {
+  z-index: -1;
+  box-shadow: 0 0 28px -6px rgba(124, 92, 255, 0.55);
+}
+@keyframes snake-run {
+  0% {
+    --snake-angle: 0deg;
+    opacity: 1;
+  }
+  24% {
+    --snake-angle: 360deg;
+    opacity: 1;
+  }
+  26%,
+  100% {
+    --snake-angle: 360deg;
+    opacity: 0;
+  }
+}
+/* The step number lights up while its card is "active". */
+.snake-num {
+  animation: snake-num var(--snake-cycle, 8s) linear infinite;
+  animation-delay: var(--snake-delay, 0s);
+}
+@keyframes snake-num {
+  0%,
+  24% {
+    color: #a18bff;
+  }
+  26%,
+  100% {
+    color: inherit;
+  }
+}
+
+/* Dashed ring that slowly flows around the How it works steps. */
+.ring-flow {
+  animation: ring-flow 18s linear infinite;
+}
+@keyframes ring-flow {
+  to {
+    stroke-dashoffset: -400;
+  }
+}
+
+/* Mode card art */
+.spin-slow {
+  animation: art-spin 8s linear infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+.spin-slower {
+  animation: art-spin 40s linear infinite;
+}
+@keyframes art-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ring-pulse {
+  0% {
+    transform: scale(0.55);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+.ring-pulse {
+  animation: ring-pulse 2.4s ease-out infinite;
+}
+@keyframes flicker {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(94, 234, 212, 0.7));
+    opacity: 1;
+  }
+  45% {
+    filter: drop-shadow(0 0 14px rgba(94, 234, 212, 0.95));
+  }
+  50% {
+    opacity: 0.75;
+  }
+  55% {
+    opacity: 1;
+  }
+}
+.flicker {
+  animation: flicker 1.8s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.6);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.twinkle {
+  animation: twinkle 2.2s ease-in-out infinite;
+}
+@keyframes float-up {
+  0% {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  20%,
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-28px);
+    opacity: 0;
+  }
+}
+.float-up {
+  animation: float-up 4s ease-in-out infinite;
+}
+/* Gradient sweep across the hero word and a soft glow on the main button */
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+.shimmer-text {
+  background-size: 200% auto;
+  animation: shimmer 6s linear infinite;
+}
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(124, 92, 255, 0);
+  }
+  50% {
+    box-shadow: 0 0 24px 2px rgba(124, 92, 255, 0.45);
+  }
+}
+.glow-pulse {
+  animation: glow-pulse 2.8s ease-in-out infinite;
+}
+@keyframes pop-in-x {
+  from {
+    opacity: 0;
+    transform: translateX(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.pop-in-x {
+  animation: pop-in-x 0.18s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .snake::before,
+  .snake::after,
+  .snake-num,
+  .ring-flow,
+  .spin-slow,
+  .spin-slower,
+  .ring-pulse,
+  .flicker,
+  .twinkle,
+  .float-up,
+  .shimmer-text,
+  .glow-pulse,
+  .pop-in-x {
+    animation: none;
+  }
+}
