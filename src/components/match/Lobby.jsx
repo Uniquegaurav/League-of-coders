@@ -124,7 +124,7 @@ export default function Lobby({ match, messages, me, user, setMatch, now }) {
                   {busy === 'join' ? <Spinner className="h-4 w-4" /> : <Users className="h-4 w-4" />} Join battle
                 </button>
               ) : (
-                <Link to="/u/me" state={{ from: location.pathname }} className="btn-primary">
+                <Link to="/u/me#leetcode" state={{ from: location.pathname }} className="btn-primary">
                   <Link2 className="h-4 w-4" /> {user.leetcode ? 'Verify LeetCode to join' : 'Link LeetCode to join'}
                 </Link>
               )

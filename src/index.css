@@ -246,6 +246,28 @@
   }
 }
 
+/* Always-on variant: the light keeps circling, used to flag a step the user still has to do. */
+.snake-loop::before,
+.snake-loop::after {
+  opacity: 1;
+  animation: snake-spin 3.2s linear infinite;
+}
+@keyframes snake-spin {
+  to {
+    --snake-angle: 360deg;
+  }
+}
+
+/* Nudge on a required field the user skipped. */
+.shake {
+  animation: shake 0.45s ease-in-out;
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
 /* Dashed ring that slowly flows around the How it works steps. */
 .ring-flow {
   animation: ring-flow 18s linear infinite;
@@ -372,6 +394,7 @@
   .snake::before,
   .snake::after,
   .snake-num,
+  .shake,
   .ring-flow,
   .spin-slow,
   .spin-slower,

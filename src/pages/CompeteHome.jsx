@@ -32,7 +32,7 @@ function LinkLeetCodeBanner({ linked }) {
           </p>
         </div>
       </div>
-      <Link to="/u/me" className="btn-secondary shrink-0">
+      <Link to="/u/me#leetcode" className="btn-secondary shrink-0">
         {linked ? 'Verify' : 'Link LeetCode'} <ArrowRight className="h-4 w-4" />
       </Link>
     </div>

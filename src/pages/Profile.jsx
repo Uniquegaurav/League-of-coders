@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { toast } from 'sonner';
@@ -264,17 +264,42 @@ function VerifySteps({ username, code, busy, onVerify, onCancel, cancelLabel }) 
   );
 }
 
+// Until the account is verified, the block gets the looping border so it stands out on the page.
 function LeetCodeAccount() {
+  const { user } = useAuth();
+  const verified = !!user.leetcode?.verified;
+  return (
+    <div
+      id="leetcode"
+      className={clsx('scroll-mt-24', !verified && 'snake snake-loop rounded-xl border border-ink-700 bg-ink-950/40 p-4')}
+    >
+      <LeetCodeAccountBody />
+    </div>
+  );
+}
+
+function LeetCodeAccountBody() {
   const { user } = useAuth();
   const location = useLocation();
   const [username, setUsername] = useState('');
   const [busy, run] = useSave();
+  const inputRef = useRef(null);
   const lc = user.leetcode;
   const claim = user.leetcodeClaim;
   const returnTo = location.state?.from;
   const verify = async () => {
     if (await run('verify', api.users.verifyLeetCode, 'LeetCode account verified and linked')) track('leetcode_linked');
   };
+
+  // Arriving from a "Link LeetCode" button: bring the block into view and focus the field.
+  useEffect(() => {
+    if (location.hash !== '#leetcode') return;
+    const t = setTimeout(() => {
+      document.getElementById('leetcode')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      inputRef.current?.focus({ preventScroll: true });
+    }, 150);
+    return () => clearTimeout(t);
+  }, [location.hash, location.key]);
 
   // Mid-claim: show the steps.
   if (claim) {
@@ -312,18 +337,36 @@ function LeetCodeAccount() {
           run('link', () => api.users.linkLeetCode(username.trim()));
         }}
       >
-        <label className="label" htmlFor="lc-username">
-          LeetCode account
-        </label>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <label className="label mb-0" htmlFor="lc-username">
+            Link your LeetCode account
+          </label>
+          <span className="chip border-warn/40 text-warn">Required to compete</span>
+        </div>
+        <ol className="mb-3 space-y-1.5 text-sm text-ink-300">
+          <li>
+            <span className="mr-2 font-mono text-brand-400">1</span>Enter your username from leetcode.com/u/<span className="text-white">username</span>
+          </li>
+          <li>
+            <span className="mr-2 font-mono text-ink-500">2</span>Paste a one-time code into your LeetCode profile ReadMe
+          </li>
+          <li>
+            <span className="mr-2 font-mono text-ink-500">3</span>Press Verify and you are ready to battle
+          </li>
+        </ol>
         <div className="flex gap-2">
-          <input id="lc-username" className="input py-2" placeholder="your-leetcode-username" value={username} onChange={(e) => setUsername(e.target.value)} />
+          <input
+            ref={inputRef}
+            id="lc-username"
+            className="input py-2"
+            placeholder="your-leetcode-username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
           <button className="btn-primary btn-sm shrink-0" disabled={!username.trim() || !!busy}>
             {busy === 'link' && <Spinner className="h-3.5 w-3.5" />} Continue
           </button>
         </div>
-        <p className="mt-1.5 text-xs text-ink-500">
-          Required to compete. Use the name from leetcode.com/u/<span className="text-ink-300">username</span>. Next you will confirm it is yours.
-        </p>
       </form>
     );
   }
@@ -490,7 +533,7 @@ function ChallengeButton({ player }) {
   }
   if (!user.leetcode?.verified) {
     return (
-      <Link to="/u/me" state={{ from: location.pathname }} className="btn-primary btn-sm" title="Verify your LeetCode account to challenge players">
+      <Link to="/u/me#leetcode" state={{ from: location.pathname }} className="btn-primary btn-sm" title="Verify your LeetCode account to challenge players">
         <Swords className="h-3.5 w-3.5" /> Challenge
       </Link>
     );

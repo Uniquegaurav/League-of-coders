@@ -58,7 +58,7 @@ function Action({ challenge, user }) {
   }
   if (!user.leetcode?.verified) {
     return (
-      <Link to="/u/me" state={{ from: location.pathname }} className="btn-primary px-6 py-3 text-base">
+      <Link to="/u/me#leetcode" state={{ from: location.pathname }} className="btn-primary px-6 py-3 text-base">
         <Link2 className="h-5 w-5" /> {user.leetcode ? 'Verify LeetCode to accept' : 'Link LeetCode to accept'}
       </Link>
     );
