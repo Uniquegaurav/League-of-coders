@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArrowRight, Link2, Swords } from 'lucide-react';
+import clsx from 'clsx';
+import { AlertCircle, ArrowRight, Link2, Swords } from 'lucide-react';
 import { api } from '../lib/api';
 import { track } from '../lib/analytics';
 import { useAuth } from '../context/AuthContext';
@@ -35,6 +36,9 @@ export default function NewMatch() {
     }
   });
   const [submitting, setSubmitting] = useState(false);
+  // Set when the user presses create without a verified LeetCode account; bumps re-trigger the shake.
+  const [linkNudge, setLinkNudge] = useState(0);
+  const linkRef = useRef(null);
 
   useEffect(() => {
     document.title = form.settings.solo ? 'Solo test · League of Coders' : 'New battle · League of Coders';
@@ -48,10 +52,17 @@ export default function NewMatch() {
   const solo = !!form.settings.solo;
   const clock = soloClock(form.settings);
   const total = form.settings.easy + form.settings.medium + form.settings.hard;
-  const canSubmit = user?.leetcode?.verified && total >= 1 && total <= 10 && !submitting;
+  const verified = !!user?.leetcode?.verified;
+  // Stays clickable while unlinked so the press can point the user at what is missing.
+  const canSubmit = total >= 1 && total <= 10 && !submitting;
 
   const submit = async (e) => {
     e.preventDefault();
+    if (!verified) {
+      setLinkNudge((n) => n + 1);
+      linkRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     setSubmitting(true);
     try {
       const { match } = await api.matches.create(form);
@@ -106,12 +117,20 @@ export default function NewMatch() {
           </div>
         </div>
 
-        {!user?.leetcode?.verified && (
-          <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-warn/30 bg-warn/5 p-4">
+        {!verified && (
+          <div
+            ref={linkRef}
+            key={linkNudge}
+            className={clsx(
+              'mb-6 flex items-center justify-between gap-4 rounded-xl border p-4 transition-colors',
+              linkNudge ? 'shake border-hard/70 bg-hard/10' : 'border-warn/30 bg-warn/5'
+            )}
+          >
             <p className="flex items-center gap-2 text-sm text-ink-200">
-              <Link2 className="h-4 w-4 text-warn" /> {user?.leetcode ? 'Verify your LeetCode account before hosting.' : 'Link your LeetCode account before hosting.'}
+              <Link2 className={clsx('h-4 w-4', linkNudge ? 'text-hard' : 'text-warn')} />{' '}
+              {user?.leetcode ? 'Verify your LeetCode account before hosting.' : 'Link your LeetCode account before hosting.'}
             </p>
-            <Link to="/u/me" className="btn-secondary btn-sm">
+            <Link to="/u/me#leetcode" state={{ from: `/new?mode=${solo ? 'solo' : 'battle'}` }} className={linkNudge ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'}>
               {user?.leetcode ? 'Verify now' : 'Link now'} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -119,7 +138,12 @@ export default function NewMatch() {
 
         <MatchSettingsForm value={form} onChange={setForm} />
 
-        <div className="mt-8 flex justify-end">
+        <div className="mt-8 flex flex-wrap items-center justify-end gap-3">
+          {!verified && linkNudge > 0 && (
+            <p role="alert" className="flex items-center gap-1.5 text-sm text-hard">
+              <AlertCircle className="h-4 w-4" /> {user?.leetcode ? 'Verify your LeetCode account first.' : 'Link your LeetCode account first.'}
+            </p>
+          )}
           <button type="submit" disabled={!canSubmit} className="btn-primary px-6 py-3 text-base">
             {submitting ? <Spinner className="h-5 w-5" /> : <Swords className="h-5 w-5" />}
             {solo ? 'Create test' : 'Create lobby'}
