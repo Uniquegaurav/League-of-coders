@@ -1,7 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { CheckCircle2, Code2, Eye, FileText, Flag, Radar, Square, Timer, Users } from 'lucide-react';
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Code2,
+  Eye,
+  FileText,
+  Flag,
+  MessageSquare,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
+  Radar,
+  Square,
+  Timer,
+  Trophy,
+  Users,
+} from 'lucide-react';
 import { api } from '../../lib/api';
 import { clock } from '../../lib/format';
 import { useTicker } from '../../hooks/useMatchRoom';
@@ -21,6 +39,85 @@ function worthNow(problem, match, nowMs, anyoneSolved) {
   const remaining = Math.min(1, Math.max(0, (end - nowMs) / (end - start)));
   return problem.basePoints + Math.round(problem.basePoints * SPEED_BONUS * remaining) + (anyoneSolved ? 0 : FIRST_SOLVE);
 }
+
+// Layout choices (panels open, split position) are remembered per browser.
+function usePref(key, initial) {
+  const [value, setValue] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(key));
+      return saved ?? initial;
+    } catch {
+      return initial;
+    }
+  });
+  const set = (next) => {
+    setValue(next);
+    try {
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch {
+      /* storage unavailable */
+    }
+  };
+  return [value, set];
+}
+
+const SPLIT_MIN = 20;
+const SPLIT_MAX = 80;
+
+// The line between the problem and the editor: drag it, or use the arrows to give one side the room.
+function SplitHandle({ containerRef, split, onChange }) {
+  const [dragging, setDragging] = useState(false);
+
+  const startDrag = (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const rect = containerRef.current.getBoundingClientRect();
+    setDragging(true);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    const move = (ev) => {
+      const pct = ((ev.clientX - rect.left) / rect.width) * 100;
+      onChange(Math.round(Math.min(SPLIT_MAX, Math.max(SPLIT_MIN, pct))));
+    };
+    const up = () => {
+      setDragging(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  const arrow = 'rounded-md border border-ink-700 bg-ink-900 p-0.5 text-ink-400 shadow transition hover:border-brand-500 hover:text-white';
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      title="Drag to resize, double-click to reset"
+      onPointerDown={startDrag}
+      onDoubleClick={() => onChange(50)}
+      className="group relative hidden w-3 shrink-0 cursor-col-resize justify-center xl:flex"
+    >
+      <div className={clsx('h-full transition-all', dragging ? 'w-0.5 bg-brand-500' : 'w-px bg-ink-800 group-hover:w-0.5 group-hover:bg-brand-500')} />
+      <div className="absolute top-1/2 z-10 flex -translate-y-1/2 flex-col gap-1" onPointerDown={(e) => e.stopPropagation()}>
+        {split > 0 && (
+          <button type="button" className={arrow} title={split > 50 ? 'Even split' : 'Expand editor'} onClick={() => onChange(split > 50 ? 50 : 0)}>
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {split < 100 && (
+          <button type="button" className={arrow} title={split < 50 ? 'Even split' : 'Expand problem'} onClick={() => onChange(split < 50 ? 50 : 100)}>
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const panelToggle = 'btn-ghost hidden p-1.5 text-ink-400 hover:text-white lg:inline-flex';
 
 function Countdown({ ms }) {
   const n = Math.max(1, Math.ceil(ms / 1000));
@@ -78,6 +175,14 @@ export default function Arena({ match, messages, me, user, now }) {
   const [selected, setSelected] = useState(0);
   const [tab, setTab] = useState('statement');
   const [sidePanel, setSidePanel] = useState('board');
+  const [leftOpen, setLeftOpen] = usePref('loc.arena.left', true);
+  const [rightOpen, setRightOpen] = usePref('loc.arena.right', true);
+  const [split, setSplit] = usePref('loc.arena.split', 50);
+  const splitRef = useRef(null);
+  const openSide = (panel) => {
+    setSidePanel(panel);
+    setRightOpen(true);
+  };
   const problem = match.problems[selected];
   const { problem: detail, loading, error } = useProblem(problem?.slug);
 
@@ -161,7 +266,18 @@ export default function Arena({ match, messages, me, user, now }) {
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* Problem list */}
-        <aside className="flex shrink-0 gap-2 overflow-x-auto border-b border-ink-800 p-3 lg:w-64 lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r">
+        <aside
+          className={clsx(
+            'flex shrink-0 gap-2 overflow-x-auto border-b border-ink-800 p-3 lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r',
+            leftOpen ? 'lg:w-64' : 'lg:w-16 lg:items-center lg:px-2'
+          )}
+        >
+          <div className={clsx('hidden items-center lg:flex', leftOpen ? 'justify-between pl-1' : 'justify-center')}>
+            {leftOpen && <span className="text-xs font-semibold uppercase tracking-wider text-ink-500">Problems</span>}
+            <button className={panelToggle} onClick={() => setLeftOpen(!leftOpen)} title={leftOpen ? 'Collapse problems' : 'Expand problems'}>
+              {leftOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+            </button>
+          </div>
           {match.problems.map((p, i) => {
             const solved = mySolve(p.slug);
             const count = solvedBy(p.slug).length;
@@ -169,8 +285,10 @@ export default function Arena({ match, messages, me, user, now }) {
               <button
                 key={p.slug}
                 onClick={() => setSelected(i)}
+                title={leftOpen ? undefined : `${letter(i)}. ${p.title}`}
                 className={clsx(
                   'flex min-w-[200px] items-start gap-3 rounded-xl border p-3 text-left transition lg:min-w-0',
+                  !leftOpen && 'lg:p-1.5',
                   selected === i ? 'border-brand-500/60 bg-brand-500/10' : 'border-ink-800 hover:border-ink-600 hover:bg-ink-850'
                 )}
               >
@@ -182,7 +300,7 @@ export default function Arena({ match, messages, me, user, now }) {
                 >
                   {solved ? <CheckCircle2 className="h-4 w-4" /> : letter(i)}
                 </span>
-                <span className="min-w-0 flex-1">
+                <span className={clsx('min-w-0 flex-1', !leftOpen && 'lg:hidden')}>
                   <span className="block truncate text-sm font-medium text-ink-200">{p.title}</span>
                   <span className="mt-1 flex items-center gap-2">
                     <DifficultyBadge difficulty={p.difficulty} />
@@ -197,7 +315,7 @@ export default function Arena({ match, messages, me, user, now }) {
               </button>
             );
           })}
-          <p className="hidden px-1 pt-2 text-[11px] leading-4 text-ink-500 lg:block">
+          <p className={clsx('hidden px-1 pt-2 text-[11px] leading-4 text-ink-500', leftOpen && 'lg:block')}>
             Submit on LeetCode. Accepted submissions are picked up about every 20s, or hit “Check my submissions”.
           </p>
         </aside>
@@ -214,8 +332,14 @@ export default function Arena({ match, messages, me, user, now }) {
               </button>
             ))}
           </div>
-          <div className="grid min-h-0 flex-1 xl:grid-cols-2">
-            <div className={clsx('min-h-0 p-4 sm:p-6 lg:overflow-y-auto', tab !== 'statement' && 'hidden xl:block')}>
+          <div ref={splitRef} className="flex min-h-0 flex-1 flex-col xl:flex-row" style={{ '--split': `${split}%` }}>
+            <div
+              className={clsx(
+                'min-h-0 min-w-0 p-4 sm:p-6 lg:overflow-y-auto xl:w-[var(--split)] xl:shrink-0',
+                tab !== 'statement' && 'hidden xl:block',
+                split === 0 && 'xl:hidden'
+              )}
+            >
               {problem && (
                 <ProblemStatement
                   slug={problem.slug}
@@ -234,26 +358,53 @@ export default function Arena({ match, messages, me, user, now }) {
                 />
               )}
             </div>
-            <div className={clsx('h-[70vh] min-h-0 p-3 lg:h-auto xl:border-l xl:border-ink-800', tab !== 'code' && 'hidden xl:block')}>
+            <SplitHandle containerRef={splitRef} split={split} onChange={setSplit} />
+            <div className={clsx('h-[70vh] min-h-0 min-w-0 flex-1 p-3 lg:h-auto', tab !== 'code' && 'hidden xl:block', split === 100 && 'xl:hidden')}>
               {problem && detail && <CodePad slug={problem.slug} snippets={detail.snippets} storageScope={match.code} />}
             </div>
           </div>
         </section>
 
         {/* Scoreboard + chat */}
-        <aside className="flex h-[480px] shrink-0 flex-col gap-3 border-t border-ink-800 p-3 lg:h-auto lg:w-80 lg:border-l lg:border-t-0">
-          <div className="flex gap-1 2xl:hidden">
-            {[
-              ['board', 'Scoreboard'],
-              ['chat', 'Chat'],
-            ].map(([key, label]) => (
-              <button key={key} onClick={() => setSidePanel(key)} className={clsx('btn btn-sm flex-1', sidePanel === key ? 'bg-ink-800 text-white' : 'text-ink-400')}>
-                {label}
+        <aside
+          className={clsx(
+            'flex h-[480px] shrink-0 flex-col gap-3 border-t border-ink-800 p-3 lg:h-auto lg:border-l lg:border-t-0',
+            rightOpen ? 'lg:w-80' : 'lg:w-14 lg:items-center lg:px-2'
+          )}
+        >
+          {/* Collapsed rail: reopen straight into the scoreboard or the chat. */}
+          {!rightOpen && (
+            <div className="hidden flex-col items-center gap-2 lg:flex">
+              <button className={panelToggle} onClick={() => setRightOpen(true)} title="Expand scoreboard and chat">
+                <PanelRightOpen className="h-4 w-4" />
               </button>
-            ))}
+              <button className={panelToggle} onClick={() => openSide('board')} title="Scoreboard">
+                <Trophy className="h-4 w-4" />
+              </button>
+              <button className={panelToggle} onClick={() => openSide('chat')} title="Room chat">
+                <MessageSquare className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+          <div className={clsx('flex min-h-0 flex-1 flex-col gap-3', !rightOpen && 'lg:hidden')}>
+            <div className="flex items-center gap-1">
+              <div className="flex flex-1 gap-1 2xl:hidden">
+                {[
+                  ['board', 'Scoreboard'],
+                  ['chat', 'Chat'],
+                ].map(([key, label]) => (
+                  <button key={key} onClick={() => setSidePanel(key)} className={clsx('btn btn-sm flex-1', sidePanel === key ? 'bg-ink-800 text-white' : 'text-ink-400')}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <button className={clsx(panelToggle, 'ml-auto')} onClick={() => setRightOpen(false)} title="Collapse scoreboard and chat">
+                <PanelRightClose className="h-4 w-4" />
+              </button>
+            </div>
+            <Scoreboard match={match} userId={user?.id} className={clsx('min-h-0 overflow-y-auto 2xl:block', sidePanel !== 'board' && 'hidden')} />
+            <ChatPanel code={match.code} messages={messages} className={clsx('min-h-0 flex-1 2xl:flex', sidePanel !== 'chat' && 'hidden')} />
           </div>
-          <Scoreboard match={match} userId={user?.id} className={clsx('min-h-0 overflow-y-auto 2xl:block', sidePanel !== 'board' && 'hidden')} />
-          <ChatPanel code={match.code} messages={messages} className={clsx('min-h-0 flex-1 2xl:flex', sidePanel !== 'chat' && 'hidden')} />
         </aside>
       </div>
     </div>
