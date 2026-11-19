@@ -614,7 +614,7 @@ export default function Profile() {
 
   return (
     <div className="space-y-6">
-      <div className={clsx('grid grid-cols-1 items-end gap-6', isMe && 'lg:grid-cols-[minmax(0,1fr)_380px]')}>
+      <div>
         <section className="min-w-0 pt-6 sm:pt-14">
           <div className="flex flex-wrap items-end gap-5">
             <span className="rounded-full ring-4 ring-ink-950/70 shadow-2xl">
@@ -689,7 +689,6 @@ export default function Profile() {
             />
           </div>
         </section>
-        {isMe && <AccountCard />}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -743,6 +742,7 @@ export default function Profile() {
         </div>
 
         <aside className="space-y-6">
+          {isMe && <AccountCard />}
           {isMe && <InviteCard user={user} />}
           <Badges player={player} />
           <section className="card p-5">

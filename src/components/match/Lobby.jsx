@@ -141,6 +141,33 @@ export default function Lobby({ match, messages, me, user, setMatch, now }) {
           </div>
         </div>
 
+        {/* Opening a room link only lets you look in; make it obvious you still have to join. */}
+        {!me && user && !solo && (
+          <div className="card flex flex-col items-start justify-between gap-3 border-brand-500/40 bg-brand-500/5 p-4 sm:flex-row sm:items-center">
+            <p className="text-sm text-ink-200">You are viewing this lobby. Join to get a spot and appear in the player list.</p>
+            {user.leetcode?.verified ? (
+              <button
+                className="btn-primary btn-sm shrink-0"
+                disabled={!!busy}
+                onClick={async () => {
+                  const res = await run('join', () => api.matches.join(match.code), 'You joined the battle!');
+                  if (res) track('match_joined', { event: match.event?.kind || null, players: match.participants.length + 1 });
+                }}
+              >
+                {busy === 'join' ? <Spinner className="h-3.5 w-3.5" /> : <Users className="h-3.5 w-3.5" />} Join battle
+              </button>
+            ) : (
+              <Link to="/u/me#leetcode" state={{ from: location.pathname }} className="btn-primary btn-sm shrink-0">
+                <Link2 className="h-3.5 w-3.5" /> {user.leetcode ? 'Verify LeetCode to join' : 'Link LeetCode to join'}
+              </Link>
+            )}
+          </div>
+        )}
+
+        {me && !isHost && !solo && (
+          <p className="text-xs text-ink-500">Closing this tab takes you out of the lobby. Reloading keeps your spot.</p>
+        )}
+
         <div className="card p-5">
           <div className="mb-4 flex items-center justify-between">
             <p className="section-title">Players</p>
