@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { lazy, Suspense, useEffect } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -82,7 +83,9 @@ function NotFound() {
 
 export default function App() {
   const { pathname } = useLocation();
-  const fullBleed = pathname.startsWith('/m/');
+  const fullBleed = pathname.startsWith('/m/') || pathname.startsWith('/problems/');
+  // Practice has three columns (lists, problems, progress) and gets a little more room.
+  const wide = pathname.startsWith('/practice');
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-x-clip">
@@ -90,7 +93,7 @@ export default function App() {
       <RouteTracker />
       <Backdrop />
       <Navbar />
-      <main className={fullBleed ? 'relative flex-1' : 'relative mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6'}>
+      <main className={fullBleed ? 'relative flex-1' : clsx('relative mx-auto w-full flex-1 px-4 py-8 sm:px-6', wide ? 'max-w-[1440px]' : 'max-w-7xl')}>
         <ErrorBoundary key={pathname}>
         <Suspense fallback={<PageLoader />}>
           <Routes>

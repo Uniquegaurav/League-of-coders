@@ -5,7 +5,8 @@ import { toast } from 'sonner';
 import { leetcodeUrl } from '../../lib/format';
 import { Spinner } from '../ui';
 
-const PREFERRED = ['python3', 'cpp', 'java', 'javascript', 'typescript', 'golang', 'rust', 'csharp', 'kotlin', 'swift', 'c'];
+// The languages most people use, in menu order. C++ is the default.
+const LANGUAGES = ['cpp', 'java', 'python3', 'javascript', 'kotlin'];
 const MONACO_LANG = { python3: 'python', python: 'python', cpp: 'cpp', c: 'c', java: 'java', javascript: 'javascript', typescript: 'typescript', golang: 'go', rust: 'rust', csharp: 'csharp', kotlin: 'kotlin', swift: 'swift', php: 'php', ruby: 'ruby', scala: 'scala' };
 const LANG_KEY = 'loc.lang';
 
@@ -15,10 +16,10 @@ const LANG_KEY = 'loc.lang';
  */
 export default function CodePad({ slug, snippets = [], storageScope = 'practice' }) {
   const options = useMemo(
-    () => [...snippets].sort((a, b) => (PREFERRED.indexOf(a.langSlug) + 1 || 99) - (PREFERRED.indexOf(b.langSlug) + 1 || 99)),
+    () => LANGUAGES.map((slug) => snippets.find((s) => s.langSlug === slug)).filter(Boolean),
     [snippets]
   );
-  const [lang, setLang] = useState(() => localStorage.getItem(LANG_KEY) || 'python3');
+  const [lang, setLang] = useState(() => localStorage.getItem(LANG_KEY) || 'cpp');
   const active = options.find((o) => o.langSlug === lang) || options[0];
   const storageKey = active ? `loc.code.${storageScope}.${slug}.${active.langSlug}` : null;
   const [code, setCode] = useState('');
