@@ -70,6 +70,10 @@ export const api = {
     get: (slug) => http.get(`/problems/${slug}`),
     pick: (params) => http.get('/problems/pick', { params }),
   },
+  run: {
+    status: () => http.get('/run'),
+    exec: (language, code, stdin) => http.post('/run', { language, code, stdin }, { timeout: 60000 }),
+  },
   premium: {
     status: () => http.get('/premium'),
     redeem: (code) => http.post('/premium/redeem', { code }),
