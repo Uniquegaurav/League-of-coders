@@ -1,9 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Editor from '@monaco-editor/react';
-import { Check, Copy, ExternalLink, RotateCcw } from 'lucide-react';
+import { Check, Copy, ExternalLink, Play, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { api } from '../../lib/api';
+import { load } from '../../lib/cache';
 import { leetcodeUrl } from '../../lib/format';
+import { useAuth } from '../../context/AuthContext';
 import { Spinner } from '../ui';
+import RunConsole from './RunConsole';
 
 // The languages most people use, in menu order. C++ is the default.
 const LANGUAGES = ['cpp', 'java', 'python3', 'javascript', 'kotlin'];
@@ -12,7 +17,8 @@ const LANG_KEY = 'loc.lang';
 
 /**
  * A scratchpad pre-filled with LeetCode's starter code. Code is kept per problem in localStorage.
- * Submissions still happen on LeetCode (it has the judge); we pick up the verdict automatically.
+ * Run compiles and runs the code on our sandboxed runner (errors are underlined in the editor);
+ * submissions still happen on LeetCode (it has the tests); we pick up the verdict automatically.
  */
 export default function CodePad({ slug, snippets = [], storageScope = 'practice' }) {
   const options = useMemo(
@@ -24,6 +30,77 @@ export default function CodePad({ slug, snippets = [], storageScope = 'practice'
   const storageKey = active ? `loc.code.${storageScope}.${slug}.${active.langSlug}` : null;
   const [code, setCode] = useState('');
   const [copied, setCopied] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  // null = available; otherwise the reason Run is off (not configured, or today's free runs are used up).
+  const [runOff, setRunOff] = useState(null);
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState(null);
+  const [consoleOpen, setConsoleOpen] = useState(false);
+  const [consoleTab, setConsoleTab] = useState('output');
+  const stdinKey = `loc.stdin.${slug}`;
+  const [stdin, setStdin] = useState(() => localStorage.getItem(stdinKey) || '');
+  const editorRef = useRef(null);
+  const monacoRef = useRef(null);
+  const runRef = useRef(() => {});
+
+  useEffect(() => {
+    load('run:status', () => api.run.status(), { ttl: 10 * 60000 })
+      .then((r) => setRunOff(!r.enabled ? "Running code isn't set up on the server yet" : r.paused ? "Today's free runs are used up. Copy your code to LeetCode to run it." : null))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    setStdin(localStorage.getItem(stdinKey) || '');
+    setResult(null);
+  }, [stdinKey]);
+
+  useEffect(() => {
+    const id = setTimeout(() => localStorage.setItem(stdinKey, stdin), 400);
+    return () => clearTimeout(id);
+  }, [stdin, stdinKey]);
+
+  // Underline compile / runtime errors on the lines they point at.
+  const setMarkers = (markers = []) => {
+    const monaco = monacoRef.current;
+    const model = editorRef.current?.getModel();
+    if (!monaco || !model) return;
+    monaco.editor.setModelMarkers(
+      model,
+      'run',
+      markers.map((m) => ({
+        startLineNumber: m.line,
+        endLineNumber: m.line,
+        startColumn: m.column,
+        endColumn: model.getLineMaxColumn(Math.min(m.line, model.getLineCount())),
+        message: m.message,
+        severity: monaco.MarkerSeverity.Error,
+      }))
+    );
+  };
+
+  const runCode = async () => {
+    if (running || !active) return;
+    if (!user) {
+      toast('Sign in to run code', { action: { label: 'Sign in', onClick: () => navigate('/login', { state: { from: window.location.pathname } }) } });
+      return;
+    }
+    setRunning(true);
+    setConsoleOpen(true);
+    setConsoleTab('output');
+    setMarkers([]);
+    try {
+      const r = await api.run.exec(active.langSlug, code, stdin);
+      setResult(r);
+      setMarkers(r.markers);
+    } catch (err) {
+      setResult({ status: 'error', message: err.message });
+      if (/paused for today/.test(err.message)) setRunOff(err.message);
+    } finally {
+      setRunning(false);
+    }
+  };
+  runRef.current = runCode;
 
   useEffect(() => {
     if (!active) return;
@@ -80,8 +157,16 @@ export default function CodePad({ slug, snippets = [], storageScope = 'practice'
           <RotateCcw className="h-3.5 w-3.5" />
         </button>
         <div className="ml-auto flex gap-2">
-          <button className="btn-secondary btn-sm" onClick={() => copyAndOpen(false)}>
-            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} Copy
+          <button className="btn-ghost btn-sm" title="Copy code" aria-label="Copy code" onClick={() => copyAndOpen(false)}>
+            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+          </button>
+          <button
+            className="btn-secondary btn-sm"
+            onClick={runCode}
+            disabled={running || !!runOff}
+            title={runOff || 'Compile and run (Ctrl/⌘ + Enter)'}
+          >
+            {running ? <Spinner className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 fill-current" />} Run
           </button>
           <button className="btn-primary btn-sm" onClick={() => copyAndOpen(true)}>
             Copy & submit on LeetCode <ExternalLink className="h-3.5 w-3.5" />
@@ -93,7 +178,15 @@ export default function CodePad({ slug, snippets = [], storageScope = 'practice'
           theme="vs-dark"
           language={MONACO_LANG[active.langSlug] || 'plaintext'}
           value={code}
-          onChange={(v) => setCode(v ?? '')}
+          onChange={(v) => {
+            setCode(v ?? '');
+            if (result?.markers?.length) setMarkers([]);
+          }}
+          onMount={(editor, monaco) => {
+            editorRef.current = editor;
+            monacoRef.current = monaco;
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runRef.current());
+          }}
           loading={<Spinner className="h-6 w-6 text-ink-500" />}
           options={{
             fontSize: 14,
@@ -106,6 +199,16 @@ export default function CodePad({ slug, snippets = [], storageScope = 'practice'
           }}
         />
       </div>
+      <RunConsole
+        open={consoleOpen}
+        onToggle={() => setConsoleOpen((o) => !o)}
+        tab={consoleTab}
+        onTab={setConsoleTab}
+        stdin={stdin}
+        onStdin={setStdin}
+        result={result}
+        running={running}
+      />
     </div>
   );
 }
