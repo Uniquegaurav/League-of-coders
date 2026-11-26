@@ -68,6 +68,15 @@ export const api = {
     topics: (pool) => http.get('/problems/topics', { params: { pool } }),
     daily: () => http.get('/problems/daily'),
     get: (slug) => http.get(`/problems/${slug}`),
+    pick: (params) => http.get('/problems/pick', { params }),
+  },
+  premium: {
+    status: () => http.get('/premium'),
+    redeem: (code) => http.post('/premium/redeem', { code }),
+    connect: (session, csrf) => http.put('/premium/session', { session, csrf }),
+    disconnect: () => http.delete('/premium/session'),
+    sync: () => http.post('/premium/sync', null, { timeout: 120000 }),
+    addCompany: (company, period) => http.post('/premium/companies', { company, period }, { timeout: 120000 }),
   },
   matches: {
     create: (body) => http.post('/matches', body),
@@ -105,6 +114,7 @@ export const api = {
     add: (key, slug) => http.put(`/lists/${key}/problems/${slug}`),
     drop: (key, slug) => http.delete(`/lists/${key}/problems/${slug}`),
     containing: (slug) => http.get(`/lists/mine/containing/${slug}`),
+    reorder: (key, slugs) => http.put(`/lists/${key}/order`, { slugs }),
   },
   posts: {
     list: (params) => http.get('/posts', { params }),
